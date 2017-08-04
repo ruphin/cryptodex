@@ -1,0 +1,16 @@
+body {
+  --chart-height: 260px;
+  margin: 0;
+  padding: 30px;
+}
+
+#charts {
+  display: flex;
+  flex-flow: row;
+  flex-wrap: wrap;
+}
+
+crypto-volume-chart {
+  width: calc(var(--intervals) * 2px);
+  border: 1px solid black;
+}

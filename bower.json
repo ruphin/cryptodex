@@ -1,0 +1,17 @@
+{
+  "name": "cryptotracker",
+  "description": "cryptotracker",
+  "main": "index.html",
+  "authors": [
+    "Goffert van Gool <ruphin@ruphin.net>"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components"
+  ],
+  "dependencies": {
+    "gluonjs": "v0.0.6",
+    "webcomponentsjs": "^1.0.4"
+  }
+}

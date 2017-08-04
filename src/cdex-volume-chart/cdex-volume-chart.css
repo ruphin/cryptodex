@@ -1,0 +1,31 @@
+
+.chart {
+  height: var(--chart-height);
+  display: flex;
+  flex-flow: row-reverse;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+.bar {
+  width: 2px;
+  position: relative;
+}
+.bar::after {
+  position: absolute;
+  display: block;
+  content: "";
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+.bar:hover::after {
+  background: rgba(0,0,0,0.1);
+}
+
+#timeCounter {
+  position: absolute;
+  top: 31px;
+  left: 33px;
+}
