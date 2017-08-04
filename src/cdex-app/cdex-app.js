@@ -9,13 +9,28 @@
     static get is() { return 'cdex-app' }
 
     connectedCallback() {
-        console.log(`Connecting ${this.constructor.is}`)
+      console.log(`Connecting ${this.constructor.is}`);
       console.log(this.$.polo.is);
-      this.$.polo.connect();
-      let subscription = this.$.polo.subscribe({first: 'ETH', second: 'BTC'}, 'trades');
-      subscription.on('data', data => {
-        console.log(data.amount);
-      });
+      window.setTimeout(() => {
+        this.$.polo.connect();
+        let subscription = this.$.polo.subscribe({first: 'BTC', second: 'ETH'}, 'trades');
+        subscription.on('data', data => {
+          data.forEach(trade => {
+            console.log(`Amount (BTC): ${trade.amount}`);
+            console.log(`Price (ETH):  ${trade.price}`);
+          });
+        });
+
+
+        let subscription2 = this.$.polo.subscribe({first: 'ETH', second: 'BTC'}, 'trades');
+        subscription2.on('data', data => {
+          data.forEach(trade => {
+            console.log("Amount (ETH): " + trade.amount);
+            console.log("Price (BTC): " + trade.price);
+          });
+        });
+
+      }, 500);
     }
   }
 

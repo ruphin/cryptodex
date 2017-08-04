@@ -72,6 +72,7 @@
         }
         subscriptions[pair] = { volume: new Set(), trades: new Set() };
       }
+      subscription.__baseCoin = coinPair.first;
       subscriptions[pair][dataType].add(subscription);
       return subscription;
     }
@@ -81,29 +82,34 @@
     }
 
     _getPairString(coin1, coin2) {
+      return this._getCoinOrder(coin1, coin2).join('_');
+    }
+
+    // Returns the coins in the order of importance.
+    _getCoinOrder(coin1, coin2) {
       if (coin1 === 'USDT') {
-        return `${coin1}_${coin2}`;
+        return [coin1, coin2];
       }
       if (coin2 === 'USDT') {
-        return `${coin2}_${coin1}`;
+        return [coin2, coin1];
       }
       if (coin1 === 'BTC') {
-        return `${coin1}_${coin2}`;
+        return [coin1, coin2];
       }
       if (coin2 === 'BTC') {
-        return `${coin2}_${coin1}`;
+        return [coin2, coin1];
       }
       if (coin1 === 'ETH') {
-        return `${coin1}_${coin2}`;
+        return [coin1, coin2];
       }
       if (coin2 === 'ETH') {
-        return `${coin2}_${coin1}`;
+        return [coin2, coin1];
       }
       if (coin1 === 'XMR') {
-        return `${coin1}_${coin2}`;
+        return [coin1, coin2];
       }
       if (coin2 === 'XMR') {
-        return `${coin2}_${coin1}`;
+        return [coin2, coin1];
       }
     }
 
@@ -118,36 +124,56 @@
 
       let pair = pairIds[tx[0]];
       if (pair === undefined) {
-        console.error(`Poloniex - message for undefined currency pair: ${tx[0]}`)
+        console.error(`Poloniex - message for undefined currency pair: ${tx[0]}`);
         return;
       }
 
+      let tradeEvents = [];
+      let orderBookEvents = [];
       tx[2].forEach(event => {
         if (event[0] === "t") { // Trade event
-          let amount = Number(event[3]) * Number(event[4]);
+          let price = Number(event[3]);
+          let amount = Number(event[4]);
           let timestamp = new Date(Number(event[5]) * MILLISECS);
-          let type;
 
+          let type;
           if (event[2] === 1) {
             type = BUY;
           } else {
             type = SELL;
           }
-          // TODO: Extract price
-          let price = 0;
-          this._tradeEvent(pair, type, timestamp, amount, price);
+          tradeEvents.push({type, timestamp, amount, price});
         }
       })
+      this._processTradeEvents(pair, tradeEvents);
     }
 
-    _tradeEvent(pair, type, timestamp, amount, price) {
+    _processTradeEvents(pair, tradeEvents) {
       subscriptions[pair].trades.forEach(subscription => {
-        subscription.fire('data', {
-          type,
-          timestamp,
-          amount,
-          price
+        let data = [];
+        tradeEvents.forEach(tradeEvent => {
+
+          let amount = tradeEvent.amount;
+          let price = tradeEvent.price;
+          let total = amount * price;
+          let amountInBaseCoin, priceOfBaseCoin;
+          if (pair.startsWith(subscription.__baseCoin)) {
+            amountInBaseCoin = total;
+            priceOfBaseCoin = 1 / price;
+          } else {
+            amountInBaseCoin = amount;
+            priceOfBaseCoin = price;
+          }
+
+          data.push({
+            type: tradeEvent.type,
+            timestamp: tradeEvent.timestamp,
+            amount: amountInBaseCoin,
+            price: priceOfBaseCoin
+          });
         });
+
+        subscription.fire('data', data);
       });
     }
   }
