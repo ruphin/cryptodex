@@ -1,5 +1,7 @@
 {
   const _source = document.currentScript;
+  const BUY = Symbol.for('buy');
+  const SELL = Symbol.for('sell');
 
   class CDexApp extends Gluon.Element {
     static get _source() {
@@ -9,28 +11,15 @@
     static get is() { return 'cdex-app' }
 
     connectedCallback() {
-      console.log(`Connecting ${this.constructor.is}`);
-      console.log(this.$.polo.is);
       window.setTimeout(() => {
         this.$.polo.connect();
-        let subscription = this.$.polo.subscribe({first: 'BTC', second: 'ETH'}, 'trades');
+        let subscription = this.$.polo.subscribe({first: 'ETH', second: 'BTC'}, 'trades');
         subscription.on('data', data => {
           data.forEach(trade => {
-            console.log(`Amount (BTC): ${trade.amount}`);
-            console.log(`Price (ETH):  ${trade.price}`);
+            this.$.volumeChart.addTransaction(trade.type, trade.timestamp, trade.amount)
           });
         });
-
-
-        let subscription2 = this.$.polo.subscribe({first: 'ETH', second: 'BTC'}, 'trades');
-        subscription2.on('data', data => {
-          data.forEach(trade => {
-            console.log("Amount (ETH): " + trade.amount);
-            console.log("Price (BTC): " + trade.price);
-          });
-        });
-
-      }, 500);
+      }, 0);
     }
   }
 

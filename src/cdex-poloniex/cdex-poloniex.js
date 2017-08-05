@@ -18,10 +18,6 @@
 
     static get is() { return 'cdex-poloniex' }
 
-    connectedCallback() {
-        console.log(`Connecting ${this.constructor.is}`)
-    }
-
     connect() {
       if (sock === undefined) {
         console.info("Poloniex - connecting backend");
@@ -31,8 +27,6 @@
           console.info("Poloniex - connected");
           // TODO: Figure out exactly which messages to send for different subscription types
           Object.keys(subscriptions).forEach((pair) => {
-            console.log(subscriptions)
-            console.log(pair)
             console.info(`Poloniex - subscribing to ${pair}`);
             sock.send(`{"command":"subscribe","channel":"${pair}"}`);
           });

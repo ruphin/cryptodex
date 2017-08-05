@@ -21,11 +21,12 @@
       this._buyList = [];
       this._sellVolumes = [];
       this._sellList = [];
-      this.scale = SCALE_DEFAULT;
       this.timespan = TIMESPAN_DEFAULT;
       this.intervals = INTERVALS_DEFAULT;
       this.window = WINDOW_DEFAULT;
+      this.scale = SCALE_DEFAULT;
       this.loop = setInterval(() => { this.__update() }, this.timespan / this.intervals * MILLISECS)
+      this.addEventListener('wheel', this._adjustZoom);
     }
 
     static get observedAttributes() {
@@ -43,7 +44,7 @@
         this._buyVolumes[0] += volume;
         this._buyList[0].push([timestamp, volume]);
       } else { // Sell
-        this._sellVolumes[0] += amount;
+        this._sellVolumes[0] += volume;
         this._sellList[0].push([timestamp, volume]);
       }
     }
@@ -51,6 +52,7 @@
     set timespan(value) {
       this._timespan = parseInt(value) || console.error(`Invalid timespan: ${value}`) || TIMESPAN_DEFAULT;
     }
+
     get timespan() {
       return this._timespan;
     }
@@ -92,17 +94,28 @@
     set window(value) {
       this._window = parseInt(value) || console.error(`Invalid window: ${value}`) || WINDOW_DEFAULT;
     }
+
     get window() {
       return this._window;
     }
-
 
     set scale(value) {
       this._scale = parseFloat(value) || console.error(`Invalid scale: ${value}`) || SCALE_DEFAULT;
       this.__render();
     }
+
     get scale() {
       return this._scale;
+    }
+
+    _adjustZoom(e) {
+      if (e.deltaY < 0) {
+        this.scale = this.scale * 1.1;
+      } else {
+        this.scale = this.scale / 1.1;
+      }
+      e.preventDefault();
+      e.stopPropagation();
     }
 
     __update() {

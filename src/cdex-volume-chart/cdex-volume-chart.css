@@ -1,6 +1,9 @@
-
+:host {
+  display: inline-block;
+  border: 1px solid black;
+}
 .chart {
-  height: var(--chart-height);
+  height: var(--chart-height, 220px);
   display: flex;
   flex-flow: row-reverse;
   align-items: stretch;
