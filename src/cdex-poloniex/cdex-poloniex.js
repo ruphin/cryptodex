@@ -1,6 +1,4 @@
 {
-  const _source = document.currentScript;
-
   const BUY = Symbol.for('buy');
   const SELL = Symbol.for('sell');
 
@@ -12,9 +10,6 @@
   let sock;
 
   class CDexPoloniex extends Gluon.Element {
-    static get _source() {
-      return _source;
-    }
 
     static get is() { return 'cdex-poloniex' }
 
@@ -35,13 +30,13 @@
         sock.addEventListener('close', () => {
           console.error("Poloniex - connection closed")
           sock = undefined;
-          window.setTimeout(() => connect(), 1000);
+          window.setTimeout(() => this.connect(), 1000);
         });
 
         sock.addEventListener('error', () => {
           console.error("Poloniex - connection error")
           sock = undefined;
-          window.setTimeout(() => connect(), 1000);
+          window.setTimeout(() => this.connect(), 1000);
         });
 
         sock.addEventListener('message', msg => {

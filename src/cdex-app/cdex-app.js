@@ -16,7 +16,21 @@
         let subscription = this.$.polo.subscribe({first: 'ETH', second: 'BTC'}, 'trades');
         subscription.on('data', data => {
           data.forEach(trade => {
-            this.$.volumeChart.addTransaction(trade.type, trade.timestamp, trade.amount)
+            this.$.ETHBTC.addTransaction(trade.type, trade.timestamp, trade.amount)
+          });
+        });
+
+        subscription = this.$.polo.subscribe({first: 'ETH', second: 'USDT'}, 'trades');
+        subscription.on('data', data => {
+          data.forEach(trade => {
+            this.$.ETHUSDT.addTransaction(trade.type, trade.timestamp, trade.amount)
+          });
+        });
+
+        subscription = this.$.polo.subscribe({first: 'BTC', second: 'USDT'}, 'trades');
+        subscription.on('data', data => {
+          data.forEach(trade => {
+            this.$.BTCUSDT.addTransaction(trade.type, trade.timestamp, trade.amount)
           });
         });
       }, 0);
