@@ -33,6 +33,8 @@
             this.$.BTCUSDT.addTransaction(trade.type, trade.timestamp, trade.amount)
           });
         });
+        console.log(this.$.bithumb)
+        this.$.bithumb.subscribeTrades('ETH', 'USD');
       }, 0);
     }
   }
