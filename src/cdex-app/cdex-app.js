@@ -12,28 +12,26 @@
 
     connectedCallback() {
       window.setTimeout(() => {
-        this.$.polo.connect();
-        let subscription = this.$.polo.subscribe({first: 'ETH', second: 'BTC'}, 'trades');
+        let subscription = this.$.polo.subscribeTrades('ETH', 'BTC');
         subscription.on('data', data => {
           data.forEach(trade => {
+            console.log(trade);
             this.$.ETHBTC.addTransaction(trade.type, trade.timestamp, trade.amount)
           });
         });
+        /*this.$.bithumb.subscribeTrades('ETH', 'USD');*/
 
-        subscription = this.$.polo.subscribe({first: 'ETH', second: 'USDT'}, 'trades');
+        subscription = this.$.polo.subscribeOrderBook('BTC', 'ETH');
         subscription.on('data', data => {
-          data.forEach(trade => {
-            this.$.ETHUSDT.addTransaction(trade.type, trade.timestamp, trade.amount)
+          data.forEach(order => {
+            if (order.type === BUY)
+              console.log("BUY");
+            else
+              console.log("SELL");
+            console.log("Amount (BTC): " + order.amount);
+            console.log("Price (ETH): " + order.price);
           });
         });
-
-        subscription = this.$.polo.subscribe({first: 'BTC', second: 'USDT'}, 'trades');
-        subscription.on('data', data => {
-          data.forEach(trade => {
-            this.$.BTCUSDT.addTransaction(trade.type, trade.timestamp, trade.amount)
-          });
-        });
-        this.$.bithumb.subscribeTrades('ETH', 'USD');
       }, 0);
     }
   }

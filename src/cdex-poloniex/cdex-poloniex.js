@@ -1,81 +1,168 @@
 {
   const BUY = Symbol.for('buy');
   const SELL = Symbol.for('sell');
+  const ORDERS = Symbol.for('orders');
+  const TRADES = Symbol.for('trades');
+  // TODO: list all accepted coin pairs
+  const ACCEPTED_BASES = ['BTC', 'ETH', 'XMR', 'USD', 'EUR'];
+  const ACCEPTED_CURRENCIES = ['EUR', 'USD', 'KRW'];
 
   const MILLISECS = 1000;
 
-  const subscriptions = {};
   const pairIds = {};
+  const orderBooks = {};
 
   let sock;
 
-  class CDexPoloniex extends Gluon.Element {
+  class CDexPoloniex extends CDexExchange {
 
     static get is() { return 'cdex-poloniex' }
 
-    connect() {
+
+    _startSubscription(requestKey) {
       if (sock === undefined) {
-        console.info("Poloniex - connecting backend");
-        sock = new WebSocket("wss://api2.poloniex.com");
-
-        sock.addEventListener('open', () => {
-          console.info("Poloniex - connected");
-          // TODO: Figure out exactly which messages to send for different subscription types
-          Object.keys(subscriptions).forEach((pair) => {
-            console.info(`Poloniex - subscribing to ${pair}`);
-            sock.send(`{"command":"subscribe","channel":"${pair}"}`);
-          });
-        });
-
-        sock.addEventListener('close', () => {
-          console.error("Poloniex - connection closed")
-          sock = undefined;
-          window.setTimeout(() => this.connect(), 1000);
-        });
-
-        sock.addEventListener('error', () => {
-          console.error("Poloniex - connection error")
-          sock = undefined;
-          window.setTimeout(() => this.connect(), 1000);
-        });
-
-        sock.addEventListener('message', msg => {
-          this._handleTransaction(JSON.parse(msg.data));
-        });
+        this.__connect();
+      }
+      if (sock.readyState === 1) {
+        orderBooks[requestKey] = undefined;
+        sock.send(`{"command":"subscribe","channel":"${requestKey}"}`);
       }
     }
 
-    subscribe(coinPair, dataType) {
-      let pair = this._getPairString(coinPair.first, coinPair.second);
-      let subscription = new Subscription();
-      subscription.unsubscribe = () => {
-        subscriptions[pair][dataType].delete(subscription);
-        if (subscriptions[pair][dataType].size === 0) {
-          _unsubscribe(pair);
+    _cancelSubscription(requestKey) {
+      sock.send(`{"command":"unsubscribe","channel":"${requestKey}"}`);
+    }
+
+    _startRequest(requestKey) {
+      // Fire a single request with the key and push the response to this._requests[requestKey]
+    }
+
+    _requestKey(subscription) {
+      return this.__getPairString(subscription.base, subscription.currency);
+    }
+
+    __connect() {
+      console.info("Poloniex - connecting backend");
+      sock = new WebSocket("wss://api2.poloniex.com");
+
+      sock.addEventListener('open', () => {
+        console.info("Poloniex - connected");
+        Object.keys(this._subscriptions).forEach((requestKey) => {
+          console.info(`Poloniex - subscribing to ${requestKey}`);
+          sock.send(`{"command":"subscribe","channel":"${requestKey}"}`);
+        });
+      });
+
+      sock.addEventListener('close', () => {
+        console.error("Poloniex - connection closed")
+        sock = undefined;
+        window.setTimeout(() => this.__connect(), 1000);
+      });
+
+      sock.addEventListener('error', () => {
+        console.error("Poloniex - connection error")
+        sock = undefined;
+        window.setTimeout(() => this.__connect(), 1000);
+      });
+
+      sock.addEventListener('message', msg => {
+        this.__handleTransaction(JSON.parse(msg.data));
+      });
+    }
+
+    __handleTransaction(tx) {
+      if (tx[0] > 1000) {
+        return;
+      }
+      if (tx[2] && tx[2][0][0] === "i") {
+        pairIds[tx[0]] = tx[2][0][1].currencyPair;
+        let requestKey = pairIds[tx[0]];
+        let orderBook = tx[2][0][1].orderBook;
+        orderBooks[requestKey] = orderBook;
+        // this._sendInitialOrderBook(requestKey, orderBook);
+        return;
+      }
+      let requestKey = pairIds[tx[0]];
+      if (requestKey === undefined) {
+        console.error(`Poloniex - message for undefined currency pair: ${tx[0]}`);
+        return;
+      }
+
+      let events = {};
+      events[ORDERS] = [];
+      events[TRADES] = [];
+      let type, price, amount;
+      tx[2].forEach(event => {
+        switch (event[0]) {
+          case "t": // Trade event
+            price = Number(event[3]);
+            amount = Number(event[4]);
+            if (event[2] === 1) {
+              type = BUY;
+            } else {
+              type = SELL;
+            }
+            let timestamp = new Date(Number(event[5]) * MILLISECS);
+
+            events[TRADES].push({type, timestamp, amount, price});
+            break;
+
+          case"o": // Order book event
+            // console.log(event);
+            price = Number(event[2]);
+            amount = Number(event[3]);
+            if (event[1] === 1) {
+              type = BUY;
+            } else {
+              type = SELL;
+            }
+            events[ORDERS].push({type, amount, price});
+            break;
         }
-      }
+      });
 
-      if (subscriptions[pair] === undefined) {
-        if (sock.readyState === 1) {
-          sock.send(`{"command":"subscribe","channel":"${pair}"}`);
+      let cache = {};
+      this._subscriptions[requestKey].forEach(subscription => {
+        let list = events[subscription.type];
+        if (list !== undefined && list.length > 0) {
+          let key = `${subscription.base}_${subscription.currency}`;
+          let result = cache[key];
+          if (result === undefined) {
+            result = this.__calculateCurrency(requestKey, subscription, list);
+            cache[key] = result;
+          }
+          subscription.data(result);
         }
-        subscriptions[pair] = { volume: new Set(), trades: new Set() };
-      }
-      subscription.__baseCoin = coinPair.first;
-      subscriptions[pair][dataType].add(subscription);
-      return subscription;
+      });
     }
 
-    _unsubscribe(pair) {
-      // TODO: Check if subscriptions is empty and something should be sent to the backend to disconnect a certain channel.
+    __calculateCurrency(requestKey, subscription, list) {
+      let convert = requestKey.startsWith(subscription.base);
+      let convertedData = list.map(event => {
+        let data = {
+          type: event.type,
+          amount: event.amount,
+          price: event.price
+        }
+        if (event.timestamp) {
+          data.timestamp = event.timestamp;
+        }
+        if (convert) {
+          data.amount =  event.amount * event.price;
+          data.price = 1 / event.price;
+        }
+        return data
+      });
+
+      return convertedData;
     }
 
-    _getPairString(coin1, coin2) {
-      return this._getCoinOrder(coin1, coin2).join('_');
+    __getPairString(coin1, coin2) {
+      return this.__getCoinOrder(coin1, coin2).join('_');
     }
 
-    // Returns the coins in the order of importance.
-    _getCoinOrder(coin1, coin2) {
+    // Returns the coins in the order of importance according to this exchange.
+    __getCoinOrder(coin1, coin2) {
       if (coin1 === 'USDT') {
         return [coin1, coin2];
       }
@@ -101,88 +188,7 @@
         return [coin2, coin1];
       }
     }
-
-    _handleTransaction(tx) {
-      if (tx[0] > 1000) {
-        return;
-      }
-      if (tx[2] && tx[2][0][0] === "i") {
-        pairIds[tx[0]] = tx[2][0][1].currencyPair;
-        return;
-      }
-
-      let pair = pairIds[tx[0]];
-      if (pair === undefined) {
-        console.error(`Poloniex - message for undefined currency pair: ${tx[0]}`);
-        return;
-      }
-
-      let tradeEvents = [];
-      let orderBookEvents = [];
-      tx[2].forEach(event => {
-        if (event[0] === "t") { // Trade event
-          let price = Number(event[3]);
-          let amount = Number(event[4]);
-          let timestamp = new Date(Number(event[5]) * MILLISECS);
-
-          let type;
-          if (event[2] === 1) {
-            type = BUY;
-          } else {
-            type = SELL;
-          }
-          tradeEvents.push({type, timestamp, amount, price});
-        }
-      })
-      this._processTradeEvents(pair, tradeEvents);
-    }
-
-    _processTradeEvents(pair, tradeEvents) {
-      subscriptions[pair].trades.forEach(subscription => {
-        let data = [];
-        tradeEvents.forEach(tradeEvent => {
-
-          let amount = tradeEvent.amount;
-          let price = tradeEvent.price;
-          let total = amount * price;
-          let amountInBaseCoin, priceOfBaseCoin;
-          if (pair.startsWith(subscription.__baseCoin)) {
-            amountInBaseCoin = total;
-            priceOfBaseCoin = 1 / price;
-          } else {
-            amountInBaseCoin = amount;
-            priceOfBaseCoin = price;
-          }
-
-          data.push({
-            type: tradeEvent.type,
-            timestamp: tradeEvent.timestamp,
-            amount: amountInBaseCoin,
-            price: priceOfBaseCoin
-          });
-        });
-
-        subscription.fire('data', data);
-      });
-    }
   }
 
   customElements.define(CDexPoloniex.is, CDexPoloniex)
-}
-
-class Subscription {
-  constructor() {
-    this.handlers = {};
-  }
-  on(eventType, handler) {
-    if (this.handlers[eventType] === undefined) {
-      this.handlers[eventType] = [];
-    }
-    this.handlers[eventType].push(handler);
-  }
-  fire(eventType, data) {
-    this.handlers[eventType].forEach(handler => {
-      handler(data)
-    })
-  }
 }
