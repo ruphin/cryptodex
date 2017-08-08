@@ -11,7 +11,7 @@
     "bower_components"
   ],
   "dependencies": {
-    "gluonjs": "v0.0.9",
+    "gluonjs": "v0.0.11",
     "webcomponentsjs": "^1.0.4"
   }
 }

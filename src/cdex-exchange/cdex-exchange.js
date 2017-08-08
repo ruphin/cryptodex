@@ -4,24 +4,40 @@
 
   // This Class is designed to be extended by implementation for each exchange.
   // Each exchange must implement the following methods:
-  //   _startSubscription(subscription)
-  //     Starts pushing trade or order changes to a subscription
+  //   _startSubscription(requestKey)
+  //     Starts a backend connection for this requestKey
   //
-  //   _cancelSubscription(subscription)
-  //     Cancels pushing trade or order changes to a subscription
+  //   _cancelSubscription(requestKey)
+  //     Stop the backend connection for this requestKey
   //
-  //   _startRequest(subscription)
-  //     Pushes the requested data to the subscription once
+  //   _startRequest(requestKey)
+  //     Start a single backend request for this requestKey
   //
-  //   _cancelRequest(subscription)
-  //     Cancels pushing the requested data to the subscription
+  //  _requestKey(subscription)
+  //    Returns a string that functions as a key for this subscription.
+  //    It is based on the following properties:
+  //      - subscription.base
+  //      - subscription.currency
+  //      - subscription.type
+  //    The requestKey should map these properties to a unique object per backend query.
+  //    For example, {BTC, EUR, TRADES} and {BTC, USD, TRADES} should map to the same string if there is only one fiat currency
   class CDexExchange extends Gluon.Element {
+
+    constructor() {
+      super();
+      // Initialize class singletons for subscriptions and requests
+      this.constructor.__subscriptions = this.constructor.__subscriptions || {};
+      this.constructor.__requests = this.constructor.__requests || {};
+      this._subscriptions = this.constructor.__subscriptions;
+      this._requests = this.constructor.__requests;
+    }
+
     getOrderBook(base, currency) {
       let subscription = new Subscription();
       let type = ORDERS;
       let cancel = () => this._cancelRequest(subscription);
       Object.assign(subscription, {base, currency, cancel, type});
-      this._startRequest(subscription);
+      this.__fudgeRequest(subscription, 'get');
       return subscription;
     }
 
@@ -30,7 +46,7 @@
       let type = ORDERS;
       let cancel = () => this._cancelSubscription(subscription);
       Object.assign(subscription, {base, currency, cancel, type});
-      this._startSubscription(subscription);
+      this.__fudgeSubscription(subscription, 'subscribe');
       return subscription;
     }
 
@@ -39,8 +55,39 @@
       let type = TRADES;
       let cancel = () => this._cancelSubscription(subscription);
       Object.assign(subscription, {base, currency, cancel, type});
-      this._startSubscription(subscription);
+      this.__fudgeSubscription(subscription, 'subscribe');
       return subscription;
+    }
+
+    // This is the default implementation that simply coerces all relevant properties
+    // Most exchanges will want to override this
+    _requestKey(subscription) {
+      return `${subscription.base}_${subscription.currency}_${String(subscription.type)}`
+    }
+
+    __fudgeSubscription(subscription) {
+      let requestKey = this._requestKey(subscription);
+      if (this._subscriptions[requestKey]) {
+        // This requestKey already has subscriptions, so just add this one to the list
+        this._subscriptions[requestKey].push(subscription);
+      } else {
+        // This requestKey has no subscriptions yet. We need to start a new backend connection
+        this._subscriptions[requestKey] = [subscription];
+        this._startSubscription(requestKey)
+      }
+    }
+
+
+    __fudgeRequest(subscription) {
+      let requestKey = this._requestKey(subscription);
+      if (this._requests[requestKey]) {
+        // This requestKey already has subscriptions, so just add this one to the list
+        this._requests[requestKey].push(subscription);
+      } else {
+        // This requestKey has no subscriptions yet. We need to start a new backend connection
+        this._requests[requestKey] = [subscription];
+        this._startRequest(requestKey)
+      }
     }
   }
 
