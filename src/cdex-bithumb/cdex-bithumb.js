@@ -6,20 +6,24 @@
   const ACCEPTED_BASES = ['BTC', 'ETH', 'DASH', 'LTC', 'ETC', 'XRP', 'BCH'];
   const ACCEPTED_CURRENCIES = ['EUR', 'USD', 'KRW'];
 
-  const poll = (requestKey) => {
+  const poll = requestKey => {
     // Sadly these endpoints are blocked by CORS, so we're done here. Shoulda tested that sooner :<
-    fetch(`https://api.bithumb.com/public/${requestKey}`).then(response => {
-      return response.json();
-    }).then(data => {
-      console.log(data);
-      // Feed data to this._subscriptions[requestKey]
-    })
+    fetch(`https://api.bithumb.com/public/${requestKey}`)
+      .then(response => {
+        return response.json();
+      })
+      .then(data => {
+        console.log(data);
+        // Feed data to this._subscriptions[requestKey]
+      });
     // Poll again after 10 seconds
     setTimeout(() => poll(requestKey), 10000 - new Date().getTime() % 10000);
-  }
+  };
 
   class CDexBithumb extends CDexExchange {
-    static get is() { return 'cdex-bithumb' }
+    static get is() {
+      return 'cdex-bithumb';
+    }
 
     _startSubscription(requestKey) {
       // Start the poll loop for this requestKey
@@ -44,10 +48,10 @@
       }
 
       let type;
-      if (subscription.type = TRADES) {
-        type = 'recent_transactions/'
-      } else if (subscription.type = ORDERS) {
-        type = 'orderbook/'
+      if ((subscription.type = TRADES)) {
+        type = 'recent_transactions/';
+      } else if ((subscription.type = ORDERS)) {
+        type = 'orderbook/';
       } else {
         throw `Unknown subscription type: ${subscription.type}`;
       }
@@ -56,5 +60,5 @@
     }
   }
 
-  customElements.define(CDexBithumb.is, CDexBithumb)
+  customElements.define(CDexBithumb.is, CDexBithumb);
 }

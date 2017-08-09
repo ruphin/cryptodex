@@ -15,9 +15,9 @@
   let sock;
 
   class CDexPoloniex extends CDexExchange {
-
-    static get is() { return 'cdex-poloniex' }
-
+    static get is() {
+      return 'cdex-poloniex';
+    }
 
     _startSubscription(requestKey) {
       if (sock === undefined) {
@@ -42,25 +42,25 @@
     }
 
     __connect() {
-      console.info("Poloniex - connecting backend");
-      sock = new WebSocket("wss://api2.poloniex.com");
+      console.info('Poloniex - connecting backend');
+      sock = new WebSocket('wss://api2.poloniex.com');
 
       sock.addEventListener('open', () => {
-        console.info("Poloniex - connected");
-        Object.keys(this._subscriptions).forEach((requestKey) => {
+        console.info('Poloniex - connected');
+        Object.keys(this._subscriptions).forEach(requestKey => {
           console.info(`Poloniex - subscribing to ${requestKey}`);
           sock.send(`{"command":"subscribe","channel":"${requestKey}"}`);
         });
       });
 
       sock.addEventListener('close', () => {
-        console.error("Poloniex - connection closed")
+        console.error('Poloniex - connection closed');
         sock = undefined;
         window.setTimeout(() => this.__connect(), 1000);
       });
 
       sock.addEventListener('error', () => {
-        console.error("Poloniex - connection error")
+        console.error('Poloniex - connection error');
         sock = undefined;
         window.setTimeout(() => this.__connect(), 1000);
       });
@@ -74,7 +74,7 @@
       if (tx[0] > 1000) {
         return;
       }
-      if (tx[2] && tx[2][0][0] === "i") {
+      if (tx[2] && tx[2][0][0] === 'i') {
         pairIds[tx[0]] = tx[2][0][1].currencyPair;
         let requestKey = pairIds[tx[0]];
         let orderBook = tx[2][0][1].orderBook;
@@ -94,7 +94,7 @@
       let type, price, amount;
       tx[2].forEach(event => {
         switch (event[0]) {
-          case "t": // Trade event
+          case 't': // Trade event
             price = Number(event[3]);
             amount = Number(event[4]);
             if (event[2] === 1) {
@@ -104,10 +104,10 @@
             }
             let timestamp = new Date(Number(event[5]) * MILLISECS);
 
-            events[TRADES].push({type, timestamp, amount, price});
+            events[TRADES].push({ type, timestamp, amount, price });
             break;
 
-          case"o": // Order book event
+          case 'o': // Order book event
             // console.log(event);
             price = Number(event[2]);
             amount = Number(event[3]);
@@ -116,7 +116,7 @@
             } else {
               type = SELL;
             }
-            events[ORDERS].push({type, amount, price});
+            events[ORDERS].push({ type, amount, price });
             break;
         }
       });
@@ -143,15 +143,15 @@
           type: event.type,
           amount: event.amount,
           price: event.price
-        }
+        };
         if (event.timestamp) {
           data.timestamp = event.timestamp;
         }
         if (convert) {
-          data.amount =  event.amount * event.price;
+          data.amount = event.amount * event.price;
           data.price = 1 / event.price;
         }
-        return data
+        return data;
       });
 
       return convertedData;
@@ -190,5 +190,5 @@
     }
   }
 
-  customElements.define(CDexPoloniex.is, CDexPoloniex)
+  customElements.define(CDexPoloniex.is, CDexPoloniex);
 }

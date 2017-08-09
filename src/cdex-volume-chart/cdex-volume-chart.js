@@ -13,7 +13,9 @@
       return _source;
     }
 
-    static get is() { return 'cdex-volume-chart' }
+    static get is() {
+      return 'cdex-volume-chart';
+    }
 
     constructor() {
       super();
@@ -25,7 +27,9 @@
       this.intervals = INTERVALS_DEFAULT;
       this.window = WINDOW_DEFAULT;
       this.scale = SCALE_DEFAULT;
-      this.loop = setInterval(() => { this.__update() }, this.timespan / this.intervals * MILLISECS)
+      this.loop = setInterval(() => {
+        this.__update();
+      }, this.timespan / this.intervals * MILLISECS);
       this.addEventListener('wheel', this._adjustZoom);
     }
 
@@ -43,7 +47,8 @@
       if (type === BUY) {
         this._buyVolumes[0] += volume;
         this._buyList[0].push([timestamp, volume]);
-      } else { // Sell
+      } else {
+        // Sell
         this._sellVolumes[0] += volume;
         this._sellList[0].push([timestamp, volume]);
       }
@@ -60,7 +65,6 @@
     set intervals(value) {
       let old_intervals = this.intervals || 0;
       this._intervals = parseInt(value) || console.error(`Invalid intervals: ${value}`) || INTERVALS_DEFAULT;
-
 
       if (old_intervals < this.intervals) {
         Array.from(Array(this.intervals - old_intervals)).forEach(() => {
@@ -82,8 +86,8 @@
         this._sellVolumes.pop();
         this._sellList.pop();
         Array.from(Array(old_intervals - this.intervals)).forEach(() => {
-          this.$.moments.removeChild(this.$.moments.lastChild)
-          this.$.averages.removeChild(this.$.averages.lastChild)
+          this.$.moments.removeChild(this.$.moments.lastChild);
+          this.$.averages.removeChild(this.$.averages.lastChild);
         });
       }
     }
@@ -121,8 +125,8 @@
     __update() {
       let now = new Date();
       let edge;
-      Array.from(Array(this.intervals).keys()).forEach((n) => {
-        let testDate =  new Date(now.getTime() - (n + 1) * this.timespan / this.intervals * MILLISECS);
+      Array.from(Array(this.intervals).keys()).forEach(n => {
+        let testDate = new Date(now.getTime() - (n + 1) * this.timespan / this.intervals * MILLISECS);
         while (true) {
           edge = this._buyList[n].shift();
           if (edge && edge[0] < testDate) {
@@ -143,7 +147,7 @@
           if (edge && edge[0] < testDate) {
             this._sellVolumes[n] -= edge[1];
             if (this._sellList[n + 1]) {
-              this._sellVolumes[n + 1] += edge[1]
+              this._sellVolumes[n + 1] += edge[1];
               this._sellList[n + 1].push(edge);
             }
           } else {
@@ -153,50 +157,55 @@
             break;
           }
         }
-      })
+      });
 
       this.__render();
-
-
     }
     __render() {
       if (!this.intervals || !this.window) {
-        console.warn("Rendering without valid intervals or window");
+        console.warn('Rendering without valid intervals or window');
         return;
       }
       let movement = 0;
       let volume = 0;
-      Array.from(Array(this.intervals + this.window).keys()).forEach((n) => {
-        movement += (this._buyVolumes[n] - this._sellVolumes[n])
-        volume += (this._buyVolumes[n] + this._sellVolumes[n])
-
+      Array.from(Array(this.intervals + this.window).keys()).forEach(n => {
+        movement += this._buyVolumes[n] - this._sellVolumes[n];
+        volume += this._buyVolumes[n] + this._sellVolumes[n];
 
         if (n - this.window >= 0) {
-          movement -= (this._buyVolumes[n - this.window] - this._sellVolumes[n - this.window])
-          volume -= (this._buyVolumes[n - this.window] + this._sellVolumes[n - this.window])
+          movement -= this._buyVolumes[n - this.window] - this._sellVolumes[n - this.window];
+          volume -= this._buyVolumes[n - this.window] + this._sellVolumes[n - this.window];
 
           let movementPercent = Math.abs(movement) * this.scale;
           let volumePercent = Math.abs(volume) * this.scale;
 
           if (movement > 0) {
-            this.$.averages.children[n - this.window].style.background = `linear-gradient(to bottom, white, white ${50 - volumePercent}%, #C1C5C7 ${50 - volumePercent}%, #C1C5C7 ${50 - movementPercent}%, #639F4D ${50 - movementPercent}%, #639F4D 50%, #C1C5C7 50%, #C1C5C7 ${50 + volumePercent}%, white ${50 + volumePercent}%, white)`;
+            this.$.averages.children[n - this.window].style.background = `linear-gradient(to bottom, white, white ${50 - volumePercent}%, #C1C5C7 ${50 -
+              volumePercent}%, #C1C5C7 ${50 - movementPercent}%, #639F4D ${50 - movementPercent}%, #639F4D 50%, #C1C5C7 50%, #C1C5C7 ${50 +
+              volumePercent}%, white ${50 + volumePercent}%, white)`;
           } else {
-            this.$.averages.children[n - this.window].style.background = `linear-gradient(to bottom, white, white ${50 - volumePercent}%, #C1C5C7 ${50 - volumePercent}%, #C1C5C7 50%, #AD092E 50%, #AD092E ${50 + movementPercent}%, #C1C5C7 ${50 + movementPercent}%, #C1C5C7 ${50 + volumePercent}%, white ${50 + volumePercent}%, white)`;
+            this.$.averages.children[n - this.window].style.background = `linear-gradient(to bottom, white, white ${50 - volumePercent}%, #C1C5C7 ${50 -
+              volumePercent}%, #C1C5C7 50%, #AD092E 50%, #AD092E ${50 + movementPercent}%, #C1C5C7 ${50 + movementPercent}%, #C1C5C7 ${50 +
+              volumePercent}%, white ${50 + volumePercent}%, white)`;
           }
         }
 
         if (n < this.intervals) {
-          let movementPercent =  Math.abs(this._buyVolumes[n] + this._sellVolumes[n]) * this.scale;
+          let movementPercent = Math.abs(this._buyVolumes[n] + this._sellVolumes[n]) * this.scale;
           let volumePercent = (this._buyVolumes[n] + this._sellVolumes[n]) * this.scale;
           if (this._buyVolumes[n] - this._sellVolumes[n] >= 0) {
-            this.$.moments.children[n].style.background = `linear-gradient(to bottom, white, white ${50 - volumePercent}%, #C1C5C7 ${50 - volumePercent}%, #C1C5C7 ${50 - movementPercent}%, #639F4D ${50 - movementPercent}%, #639F4D 50%, #C1C5C7 50%, #C1C5C7 ${50 + volumePercent}%, white ${50 + volumePercent}%, white)`;
+            this.$.moments.children[n].style.background = `linear-gradient(to bottom, white, white ${50 - volumePercent}%, #C1C5C7 ${50 -
+              volumePercent}%, #C1C5C7 ${50 - movementPercent}%, #639F4D ${50 - movementPercent}%, #639F4D 50%, #C1C5C7 50%, #C1C5C7 ${50 +
+              volumePercent}%, white ${50 + volumePercent}%, white)`;
           } else {
-            this.$.moments.children[n].style.background = `linear-gradient(to bottom, white, white ${50 - volumePercent}%, #C1C5C7 ${50 - volumePercent}%, #C1C5C7 50%, #AD092E 50%, #AD092E ${50 + movementPercent}%, #C1C5C7 ${50 + movementPercent}%, #C1C5C7 ${50 + volumePercent}%, white ${50 + volumePercent}%, white)`;
+            this.$.moments.children[n].style.background = `linear-gradient(to bottom, white, white ${50 - volumePercent}%, #C1C5C7 ${50 -
+              volumePercent}%, #C1C5C7 50%, #AD092E 50%, #AD092E ${50 + movementPercent}%, #C1C5C7 ${50 + movementPercent}%, #C1C5C7 ${50 +
+              volumePercent}%, white ${50 + volumePercent}%, white)`;
           }
         }
-      })
+      });
     }
   }
 
-  customElements.define(CDexVolumeChart.is, CDexVolumeChart)
+  customElements.define(CDexVolumeChart.is, CDexVolumeChart);
 }

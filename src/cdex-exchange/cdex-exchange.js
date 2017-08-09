@@ -22,7 +22,6 @@
   //    The requestKey should map these properties to a unique object per backend query.
   //    For example, {BTC, EUR, TRADES} and {BTC, USD, TRADES} should map to the same string if there is only one fiat currency
   class CDexExchange extends Gluon.Element {
-
     constructor() {
       super();
       // Initialize class singletons for subscriptions and requests
@@ -36,7 +35,7 @@
       let subscription = new Subscription();
       let type = ORDERS;
       let cancel = () => this._cancelRequest(subscription);
-      Object.assign(subscription, {base, currency, cancel, type});
+      Object.assign(subscription, { base, currency, cancel, type });
       this.__fudgeRequest(subscription, 'get');
       return subscription;
     }
@@ -45,7 +44,7 @@
       let subscription = new Subscription();
       let type = ORDERS;
       let cancel = () => this._cancelSubscription(subscription);
-      Object.assign(subscription, {base, currency, cancel, type});
+      Object.assign(subscription, { base, currency, cancel, type });
       this.__fudgeSubscription(subscription, 'subscribe');
       return subscription;
     }
@@ -54,7 +53,7 @@
       let subscription = new Subscription();
       let type = TRADES;
       let cancel = () => this._cancelSubscription(subscription);
-      Object.assign(subscription, {base, currency, cancel, type});
+      Object.assign(subscription, { base, currency, cancel, type });
       this.__fudgeSubscription(subscription, 'subscribe');
       return subscription;
     }
@@ -62,7 +61,7 @@
     // This is the default implementation that simply coerces all relevant properties
     // Most exchanges will want to override this
     _requestKey(subscription) {
-      return `${subscription.base}_${subscription.currency}_${String(subscription.type)}`
+      return `${subscription.base}_${subscription.currency}_${String(subscription.type)}`;
     }
 
     __fudgeSubscription(subscription) {
@@ -73,10 +72,9 @@
       } else {
         // This requestKey has no subscriptions yet. We need to start a new backend connection
         this._subscriptions[requestKey] = [subscription];
-        this._startSubscription(requestKey)
+        this._startSubscription(requestKey);
       }
     }
-
 
     __fudgeRequest(subscription) {
       let requestKey = this._requestKey(subscription);
@@ -86,7 +84,7 @@
       } else {
         // This requestKey has no subscriptions yet. We need to start a new backend connection
         this._requests[requestKey] = [subscription];
-        this._startRequest(requestKey)
+        this._startRequest(requestKey);
       }
     }
   }
