@@ -26,7 +26,8 @@
             this.$.ETHUSDT.addTransaction(trade.type, trade.timestamp, trade.amount);
           });
         });
-        subscription = this.$.polo.getOrderBook('ETH', 'BTC');
+        
+        /*subscription = this.$.polo.getOrderBook('ETH', 'BTC');
         subscription.on('data', data => {
           console.log('Order book ETH-BTC');
           let sellOrders = data[0];
@@ -35,7 +36,12 @@
           console.log(sellOrders);
           console.log('Buy orders:');
           console.log(buyOrders);
-        });
+        });*/
+
+        /*subscription = this.$.yunbi.subscribeTrades('BTC', 'CNY');
+        subscription.on('data', data => {
+          console.log(data);
+        });*/
       }, 0);
     }
   }
