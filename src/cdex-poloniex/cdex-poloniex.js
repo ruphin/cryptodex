@@ -24,17 +24,21 @@
         this.__connect();
       }
       if (sock.readyState === 1) {
-        orderBooks[requestKey] = undefined;
-        sock.send(`{"command":"subscribe","channel":"${requestKey}"}`);
+        this.__subscribe(requestKey);
       }
     }
 
     _cancelSubscription(requestKey) {
-      sock.send(`{"command":"unsubscribe","channel":"${requestKey}"}`);
+      if (sock !== undefined) {
+        this.__unsubscribe(requestKey);
+      }
     }
 
     _startRequest(requestKey) {
       // Fire a single request with the key and push the response to this._requests[requestKey]
+      if (orderBooks[requestKey] !== undefined) {
+        this.__sendInitialOrderBook(requestKey);
+      }
     }
 
     _requestKey(subscription) {
@@ -48,8 +52,7 @@
       sock.addEventListener('open', () => {
         console.info('Poloniex - connected');
         Object.keys(this._subscriptions).forEach(requestKey => {
-          console.info(`Poloniex - subscribing to ${requestKey}`);
-          sock.send(`{"command":"subscribe","channel":"${requestKey}"}`);
+          this.__subscribe(requestKey);
         });
       });
 
@@ -70,6 +73,17 @@
       });
     }
 
+    __subscribe(requestKey) {
+      console.info(`Poloniex - subscribing to ${requestKey}`);
+      orderBooks[requestKey] = undefined;
+      sock.send(`{"command":"subscribe","channel":"${requestKey}"}`);
+    }
+
+    __unsubscribe(requestKey) {
+      console.info(`Poloniex - unsubscribing from ${requestKey}`);
+      sock.send(`{"command":"unsubscribe","channel":"${requestKey}"}`);
+    }
+
     __handleTransaction(tx) {
       if (tx[0] > 1000) {
         return;
@@ -79,7 +93,7 @@
         let requestKey = pairIds[tx[0]];
         let orderBook = tx[2][0][1].orderBook;
         orderBooks[requestKey] = orderBook;
-        // this._sendInitialOrderBook(requestKey, orderBook);
+        this.__sendInitialOrderBook(requestKey);
         return;
       }
       let requestKey = pairIds[tx[0]];
@@ -108,7 +122,6 @@
             break;
 
           case 'o': // Order book event
-            // console.log(event);
             price = Number(event[2]);
             amount = Number(event[3]);
             if (event[1] === 1) {
@@ -134,6 +147,14 @@
           subscription.data(result);
         }
       });
+    }
+
+    __sendInitialOrderBook(requestKey) {
+      if (this._requests[requestKey] !== undefined) {
+        this._requests[requestKey].forEach(subscription => {
+          subscription.data(orderBooks[requestKey]);
+        });
+      }
     }
 
     __calculateCurrency(requestKey, subscription, list) {

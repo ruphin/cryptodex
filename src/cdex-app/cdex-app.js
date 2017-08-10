@@ -26,6 +26,16 @@
             this.$.ETHUSDT.addTransaction(trade.type, trade.timestamp, trade.amount);
           });
         });
+        subscription = this.$.polo.getOrderBook('ETH', 'BTC');
+        subscription.on('data', data => {
+          console.log('Order book ETH-BTC');
+          let sellOrders = data[0];
+          let buyOrders = data[1];
+          console.log('Sell orders:');
+          console.log(sellOrders);
+          console.log('Buy orders:');
+          console.log(buyOrders);
+        });
       }, 0);
     }
   }
