@@ -105,31 +105,16 @@
       let events = {};
       events[ORDERS] = [];
       events[TRADES] = [];
-      let type, price, amount;
       tx[2].forEach(event => {
         switch (event[0]) {
           case 't': // Trade event
-            price = Number(event[3]);
-            amount = Number(event[4]);
-            if (event[2] === 1) {
-              type = BUY;
-            } else {
-              type = SELL;
-            }
-            let timestamp = new Date(Number(event[5]) * MILLISECS);
-
-            events[TRADES].push({ type, timestamp, amount, price });
+            let tradeEvent = this.__processTradeEvent(event);
+            events[TRADES].push(tradeEvent);
             break;
 
           case 'o': // Order book event
-            price = Number(event[2]);
-            amount = Number(event[3]);
-            if (event[1] === 1) {
-              type = BUY;
-            } else {
-              type = SELL;
-            }
-            events[ORDERS].push({ type, amount, price });
+            let orderEvent = this.__processOrderEvent(requestKey, event);
+            events[ORDERS].push(orderEvent);
             break;
         }
       });
@@ -147,6 +132,40 @@
           subscription.data(result);
         }
       });
+    }
+
+    __processTradeEvent(event) {
+      let price = Number(event[3]);
+      let amount = Number(event[4]);
+      let type;
+      if (event[2] === 1) {
+        type = BUY;
+      } else {
+        type = SELL;
+      }
+      let timestamp = new Date(Number(event[5]) * MILLISECS);
+      return { type, timestamp, amount, price };
+    }
+
+    __processOrderEvent(requestKey, event) {
+      let price = Number(event[2]);
+      let newAmount = Number(event[3]);
+      let type;
+      if (event[1] === 1) {
+        type = BUY;
+      } else {
+        type = SELL;
+      }
+
+      let orderBook = orderBooks[requestKey];
+      let oldAmount = orderBook[event[1]][price];
+      if (oldAmount === undefined) {
+        oldAmount = 0;
+      }
+      let amountDiff = newAmount - oldAmount;
+      orderBook[event[1]][price] = newAmount;
+
+      return { type, amount: amountDiff, price }
     }
 
     __sendInitialOrderBook(requestKey) {
