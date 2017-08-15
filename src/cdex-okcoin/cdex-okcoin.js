@@ -5,7 +5,6 @@
   const TRADES = Symbol.for("trades");
 
   const ACCEPTED_BASES = ["BTC", "LTC", "ETH", "ETC"];
-  const ACCEPTED_CURRENCIES = ["CNY"];
 
   const MILLISECS = 1000;
   const HOUR = 3600 * MILLISECS;
@@ -47,26 +46,29 @@
       let coin1 = subscription.base;
       let coin2 = subscription.currency;
 
-      let coin;
+      let requestBase;
       if (ACCEPTED_BASES.includes(coin1)) {
-        this.__checkAcceptedCurrency(coin2);
-        coin = coin1.toLowerCase();
+        requestBase = coin1;
       } else if (ACCEPTED_BASES.includes(coin2)) {
-        this.__checkAcceptedCurrency(coin1);
-        coin = coin2.toLowerCase();
+        requestBase = coin2;
       } else {
         throw `No supported base found in ${coin1}-${coin2}. Accepted are: ${ACCEPTED_BASES.join(
           ", "
         )}`;
       }
 
+      let requestKey;
       if (subscription.type === TRADES) {
-        return `${coin}_trades`;
+        requestKey = `${requestBase.toLowerCase()}_trades`;
       }
       if (subscription.type === ORDERS) {
-        return `${coin}_depth`;
+        requestKey = `${requestBase.toLowerCase()}_depth`;
       }
+
+      return [requestKey, requestBase, 'CNY'];
     }
+
+    // PRIVATE
 
     __connect() {
       console.info("Okcoin - connecting backend");
@@ -153,25 +155,27 @@
 
     __processOrderEvent(requestKey, event) {
       let sellEvents = event.asks.map(event => {
+        let type = SELL;
         let price = event[0];
         let newAmount = event[1];
-        let amountDiff = this.__updateOrderBook(
+        let amount = this.__updateOrderBook(
           orderBooks[requestKey].asks,
           price,
           newAmount
         );
-        return { price, amount: amountDiff, type: SELL };
+        return { price, amount, type };
       });
 
       let buyEvents = event.bids.map(event => {
+        let type = BUY;
         let price = event[0];
         let newAmount = event[1];
-        let amountDiff = this.__updateOrderBook(
+        let amount = this.__updateOrderBook(
           orderBooks[requestKey].bids,
           price,
           newAmount
         );
-        return { price, amount: amountDiff, type: BUY };
+        return { price, amount, type };
       });
 
       return sellEvents.concat(buyEvents);
@@ -194,7 +198,7 @@
         return subscription.type === type;
       });
       subscriptions.forEach(subscription => {
-        let result = this.__calculateCurrency(requestKey, subscription, events);
+        let result = subscription.convert(events);
         subscription.data(result);
       });
     }
@@ -207,33 +211,7 @@
       }
     }
 
-    __calculateCurrency(requestKey, subscription, list) {
-      let convert = requestKey.startsWith(subscription.base.toLowerCase());
-      let convertedData = list.map(event => {
-        let data = {
-          type: event.type,
-          amount: event.amount,
-          price: event.price
-        };
-        if (event.timestamp) {
-          data.timestamp = event.timestamp;
-        }
-        if (convert) {
-          data.amount = event.amount * event.price;
-          data.price = 1 / event.price;
-        }
-        return data;
-      });
-
-      return convertedData;
-    }
-
-    __checkAcceptedCurrency(coin) {
-      if (!ACCEPTED_CURRENCIES.includes(coin)) {
-        throw `Currency ${coin} is not supported by OKCoin`;
-      }
-    }
-
+    // OKCoin sends the timestamp in an awkward format, convert it to a Date.
     __convertTime(timeString) {
       let [hour, minutes, seconds] = /(\d\d):(\d\d):(\d\d)/
         .exec(timeString)

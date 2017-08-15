@@ -3,10 +3,8 @@
   const SELL = Symbol.for('sell');
   const ORDERS = Symbol.for('orders');
   const TRADES = Symbol.for('trades');
-  // TODO: list the accepted coins
-  const ACCEPTED_BASES = [];
-  const ACCEPTED_CURRENCIES = ['CNY'];
-
+  // TODO: list the accepted base coins
+  const ACCEPTED_BASES = ['BTC', 'ETH', 'ETC'];
   const MILLISECS = 1000;
 
   const orderBooks = {};
@@ -34,15 +32,20 @@
     }
 
     _startRequest(requestKey) {
-      // Fire a single request with the key and push the response to this._requests[requestKey]
       if (orderBooks[requestKey] !== undefined) {
         this.__sendInitialOrderBook(requestKey);
       }
     }
 
     _requestKey(subscription) {
-      return this.__getPairString(subscription.base, subscription.currency);
+      let [requestBase, requestCurrency] = this.__getCoinOrder(subscription.base, subscription.currency);
+      // Currently the request currency has to be CNY.
+      requestCurrency = 'CNY';
+      let requestKey = `market-${requestBase.toLowerCase()}${requestCurrency.toLowerCase()}-global`;
+      return [requestKey, requestBase, requestCurrency];
     }
+
+    // PRIVATE
 
     __connect() {
       console.info('Yunbi - connecting backend');
@@ -101,7 +104,7 @@
             return subscription.type === TRADES;
           });
           subscriptions.forEach(subscription => {
-            let result = this.__calculateCurrency(requestKey, subscription, trades);
+            let result = subscription.convert(trades);
             subscription.data(result);
           });
           return;
@@ -111,7 +114,7 @@
           this.__sendInitialOrderBook(requestKey);
           return;
         default:
-        // ignore
+          // ignore
       }
     }
 
@@ -123,42 +126,16 @@
         });
       }
     }
-
-    // TODO: shared with Poloniex
-    __calculateCurrency(requestKey, subscription, list) {
-      let convert = requestKey.startsWith(subscription.base);
-      let convertedData = list.map(event => {
-        let data = {
-          type: event.type,
-          amount: event.amount,
-          price: event.price
-        };
-        if (event.timestamp) {
-          data.timestamp = event.timestamp;
-        }
-        if (convert) {
-          data.amount = event.amount * event.price;
-          data.price = 1 / event.price;
-        }
-        return data;
-      });
-
-      return convertedData;
-    }
-
-    __getPairString(coin1, coin2) {
-      return `market-${this.__getCoinOrder(coin1, coin2).join('').toLowerCase()}-global`;
-    }
-
+    
     // Returns the coins in the order of importance according to this exchange.
     __getCoinOrder(coin1, coin2) {
-      if (ACCEPTED_CURRENCIES.includes(coin1)) {
-        return [coin2, coin1];
-      }
-      if (ACCEPTED_CURRENCIES.includes(coin2)) {
+      if (ACCEPTED_BASES.includes(coin1)) {
         return [coin1, coin2];
       }
-      // Else: currency conversion needed.
+      if (ACCEPTED_BASES.includes(coin2)) {
+        return [coin2, coin1];
+      }
+      throw `No accepted base found in ${coin1}-${coin2}. Accepted are: ${ACCEPTED_BASES.join(', ')}`
     }
   }
 

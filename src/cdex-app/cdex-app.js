@@ -14,6 +14,7 @@
 
     connectedCallback() {
       // Poloniex
+
       window.setTimeout(() => {
         let subscription = this.$.polo.subscribeTrades('ETH', 'BTC');
         subscription.on('data', data => {
@@ -36,31 +37,33 @@
           });
         });
 
-        /*subscription = this.$.polo.subscribeOrderBook('ETH', 'BTC');
-        subscription.on('data', data => {
-          data.forEach(order => {
-            console.log(`${order.type === BUY ? 'BUY' : 'SELL'} ${order.price}: ${order.amount >= 0 ? ('+' + order.amount) : order.amount}`)
-          });
-        });*/
+        // subscription = this.$.polo.subscribeOrderBook('ETH', 'BTC');
+        // subscription.on('data', data => {
+        //   data.forEach(order => {
+        //     console.log(`${order.type === BUY ? 'BUY' : 'SELL'} ${order.price}: ${order.amount >= 0 ? ('+' + order.amount) : order.amount}`)
+        //   });
+        // });
 
-        /*subscription = this.$.polo.getOrderBook('ETH', 'BTC');
-        subscription.on('data', data => {
-          console.log('Order book ETH-BTC');
-          let sellOrders = data[0];
-          let buyOrders = data[1];
-          console.log('Sell orders:');
-          console.log(sellOrders);
-          console.log('Buy orders:');
-          console.log(buyOrders);
-        });*/
+        // subscription = this.$.polo.getOrderBook('ETH', 'BTC');
+        // subscription.on('data', data => {
+        //   console.log('Order book ETH-BTC');
+        //   let sellOrders = data[0];
+        //   let buyOrders = data[1];
+        //   console.log('Sell orders:');
+        //   console.log(sellOrders);
+        //   console.log('Buy orders:');
+        //   console.log(buyOrders);
+        // });
 
         // Yunbi
+
         /*subscription = this.$.yunbi.subscribeTrades('BTC', 'CNY');
         subscription.on('data', data => {
           console.log(data);
         });*/
 
         // OKCoin
+        
         // subscription = this.$.okcoin.subscribeTrades("CNY", "BTC");
         // subscription.on("data", data => {
         //   console.log(data);
@@ -78,7 +81,7 @@
         //     );
         //   });
         // });
-      }, 0);
+      }, 1000);
     }
   }
 
