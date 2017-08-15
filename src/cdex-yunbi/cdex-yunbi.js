@@ -1,11 +1,11 @@
 {
-  const BUY = Symbol.for('buy');
-  const SELL = Symbol.for('sell');
-  const ORDERS = Symbol.for('orders');
-  const TRADES = Symbol.for('trades');
+  const BUY = Symbol.for("buy");
+  const SELL = Symbol.for("sell");
+  const ORDERS = Symbol.for("orders");
+  const TRADES = Symbol.for("trades");
   // TODO: list the accepted coins
   const ACCEPTED_BASES = [];
-  const ACCEPTED_CURRENCIES = ['CNY'];
+  const ACCEPTED_CURRENCIES = ["CNY"];
 
   const MILLISECS = 1000;
 
@@ -15,7 +15,7 @@
 
   class CDexYunbi extends CDexExchange {
     static get is() {
-      return 'cdex-yunbi';
+      return "cdex-yunbi";
     }
 
     _startSubscription(requestKey) {
@@ -45,29 +45,31 @@
     }
 
     __connect() {
-      console.info('Yunbi - connecting backend');
-      sock = new WebSocket('wss://slanger.yunbi.com:18080/app/d2e734a0694b3cb3ed8cdcadcc6f346e?protocol=7&client=js&version=2.2.0&flash=false');
+      console.info("Yunbi - connecting backend");
+      sock = new WebSocket(
+        "wss://slanger.yunbi.com:18080/app/d2e734a0694b3cb3ed8cdcadcc6f346e?protocol=7&client=js&version=2.2.0&flash=false"
+      );
 
-      sock.addEventListener('open', () => {
-        console.info('Yunbi - connected');
+      sock.addEventListener("open", () => {
+        console.info("Yunbi - connected");
         Object.keys(this._subscriptions).forEach(requestKey => {
           this.__subscribe(requestKey);
         });
       });
 
-      sock.addEventListener('close', () => {
-        console.error('Yunbi - connection closed');
+      sock.addEventListener("close", () => {
+        console.error("Yunbi - connection closed");
         sock = undefined;
         window.setTimeout(() => this.__connect(), 1000);
       });
 
-      sock.addEventListener('error', () => {
-        console.error('Yunbi - connection error');
+      sock.addEventListener("error", () => {
+        console.error("Yunbi - connection error");
         sock = undefined;
         window.setTimeout(() => this.__connect(), 1000);
       });
 
-      sock.addEventListener('message', msg => {
+      sock.addEventListener("message", msg => {
         this.__handleTransaction(JSON.parse(msg.data));
       });
     }
@@ -75,42 +77,53 @@
     __subscribe(requestKey) {
       console.info(`Yunbi - subscribing to ${requestKey}`);
       orderBooks[requestKey] = undefined;
-      sock.send(`{"event": "pusher:subscribe", "data": {"channel": "${requestKey}"}}`);
+      sock.send(
+        `{"event": "pusher:subscribe", "data": {"channel": "${requestKey}"}}`
+      );
     }
 
     __unsubscribe(requestKey) {
       console.info(`Yunbi - unsubscribing from ${requestKey}`);
-      sock.send(`{event: "pusher:unsubscribe", data: {channel: "${requestKey}"}}`);
+      sock.send(
+        `{event: "pusher:unsubscribe", data: {channel: "${requestKey}"}}`
+      );
     }
 
     __handleTransaction(tx) {
       let requestKey = tx.channel;
       let data = JSON.parse(tx.data);
 
-      switch(tx.event) {
-        case 'trades':
+      switch (tx.event) {
+        case "trades":
           let trades = data.trades.map(trade => {
             return {
               price: Number(trade.price),
               amount: Number(trade.amount),
-              type: (trade.type === 'buy' ? BUY : SELL),
+              type: trade.type === "buy" ? BUY : SELL,
               timestamp: new Date(Number(trade.date) * MILLISECS)
-            }
+            };
           });
-          let subscriptions = 
-              this._subscriptions[requestKey].filter(subscription => {return subscription.type === TRADES});
+          let subscriptions = this._subscriptions[
+            requestKey
+          ].filter(subscription => {
+            return subscription.type === TRADES;
+          });
           subscriptions.forEach(subscription => {
-            let result = __calculateCurrency(requestKey, subscription, trades);
+            let result = this.__calculateCurrency(
+              requestKey,
+              subscription,
+              trades
+            );
             subscription.data(result);
           });
           return;
-        case 'update':
+        case "update":
           // TODO: find difference between current and last orderbook and notify subscribers of the difference.
           orderBooks[requestKey] = data;
           this.__sendInitialOrderBook(requestKey);
           return;
         default:
-          // ignore
+        // ignore
       }
     }
 
@@ -146,7 +159,9 @@
     }
 
     __getPairString(coin1, coin2) {
-      return `market-${this.__getCoinOrder(coin1, coin2).join('').toLowerCase()}-global`;
+      return `market-${this.__getCoinOrder(coin1, coin2)
+        .join("")
+        .toLowerCase()}-global`;
     }
 
     // Returns the coins in the order of importance according to this exchange.
