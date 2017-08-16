@@ -4,35 +4,30 @@
 const gulp = require('gulp');
 const fs = require('fs');
 const replace = require('gulp-replace');
+const useref = require('gulp-useref');
 const del = require('del');
 const browserSync = require('browser-sync');
 const path = require('path');
 const historyApiFallback = require('connect-history-api-fallback');
 
-
-const AUTOPREFIXER_BROWSERS = [
-  'ie >= 10',
-  'ie_mob >= 10',
-  'ff >= 30',
-  'chrome >= 34',
-  'safari >= 7',
-  'opera >= 23',
-  'ios >= 7',
-  'android >= 4.4',
-  'bb >= 10'
-];
+const AUTOPREFIXER_BROWSERS = ['ie >= 10', 'ie_mob >= 10', 'ff >= 30', 'chrome >= 34', 'safari >= 7', 'opera >= 23', 'ios >= 7', 'android >= 4.4', 'bb >= 10'];
 
 const SOURCE = 'src';
 const source = function(...subpaths) {
   return subpaths.length == 0 ? SOURCE : path.join(SOURCE, ...subpaths);
 };
 
-const TMP = '.tmp'
+const BOWER = 'bower_components';
+const bower = function(...subpaths) {
+  return subpaths.length == 0 ? BOWER : path.join(BOWER, ...subpaths);
+};
+
+const TMP = '.tmp';
 const tmp = function(...subpaths) {
   return subpaths.length == 0 ? TMP : path.join(TMP, ...subpaths);
 };
 
-const DIST = 'dist'
+const DIST = 'dist';
 const dist = function(...subpaths) {
   return subpaths.length == 0 ? DIST : path.join(DIST, ...subpaths);
 };
@@ -53,7 +48,7 @@ gulp.task('serve', function() {
       }
     },
     server: {
-      baseDir: [source(), 'bower_components', ''],
+      baseDir: [source(), ''],
       middleware: [historyApiFallback()]
     }
   });
@@ -78,7 +73,7 @@ gulp.task('serve:dist', ['default'], function() {
       }
     },
     server: {
-      baseDir: [dist(), 'bower_components', ''],
+      baseDir: [dist(), ''],
       middleware: [historyApiFallback()]
     }
   });
@@ -86,17 +81,35 @@ gulp.task('serve:dist', ['default'], function() {
   gulp.watch('index.html', browserSync.reload);
 });
 
-// Build production files
-gulp.task('default', function(cb) {
-  del(dist('*'));
-  return gulp.src(source('**/*.html'), { base: source() })
-  .pipe(replace(/<link rel="stylesheet" href="([^"]*)"\s*>/, function(_, fileName) {
-      let style = fs.readFileSync(path.join(this.file.path.replace(/\/[^\/]*$/, '/'), '..', fileName), 'utf8');
-      return '<style>\n' + style + '</style>';
-  }))
-  .pipe(replace(/<script src="([^"]*)"\s*><\/script>/, function(_, fileName) {
-      let script = fs.readFileSync(path.join(this.file.path.replace(/\/[^\/]*$/, '/'), fileName), 'utf8');
-      return '<script>\n' + script + '</script>';
-  }))
-  .pipe(gulp.dest(dist()));
+gulp.task('clean', function(cb) {
+  return del(dist('*'));
 });
+
+gulp.task('elements', ['clean'], function(cb) {
+  return gulp
+    .src(source('**/*.html'), { base: source() })
+    .pipe(
+      replace(/<link rel="stylesheet" href="([^"]*)"\s*>/, function(_, fileName) {
+        let style = fs.readFileSync(path.join(this.file.path.replace(/\/[^\/]*$/, '/'), '..', fileName), 'utf8');
+        return '<style>\n' + style + '</style>';
+      })
+    )
+    .pipe(
+      replace(/<script src="([^"]*)"\s*><\/script>/, function(_, fileName) {
+        let script = fs.readFileSync(path.join(this.file.path.replace(/\/[^\/]*$/, '/'), fileName), 'utf8');
+        return '<script>\n' + script + '</script>';
+      })
+    )
+    .pipe(gulp.dest(dist()));
+});
+
+gulp.task('index', ['clean'], function(cb) {
+  return gulp.src('index.html').pipe(useref()).pipe(gulp.dest(dist()));
+});
+
+gulp.task('bower', ['clean'], function(cb) {
+  return gulp.src(bower('**/*')).pipe(gulp.dest(dist('bower_components/')));
+});
+
+// Build production files
+gulp.task('default', ['elements', 'bower', 'index'], function(cb) {});

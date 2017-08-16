@@ -1,7 +1,7 @@
 {
   const _source = document.currentScript;
-  const BUY = Symbol.for("buy");
-  const SELL = Symbol.for("sell");
+  const BUY = Symbol.for('buy');
+  const SELL = Symbol.for('sell');
 
   class CDexApp extends Gluon.Element {
     static get _source() {
@@ -9,30 +9,30 @@
     }
 
     static get is() {
-      return "cdex-app";
+      return 'cdex-app';
     }
 
     connectedCallback() {
       // Poloniex
       window.setTimeout(() => {
-        let subscription = this.$.polo.subscribeTrades("ETH", "BTC");
-        subscription.on("data", data => {
+        let subscription = this.$.polo.subscribeTrades('ETH', 'BTC');
+        subscription.on('data', data => {
           data.forEach(trade => {
-            this.$.ETHBTC.addTransaction(
-              trade.type,
-              trade.timestamp,
-              trade.amount
-            );
+            this.$.poloethbtc.addTransaction(trade.type, trade.timestamp, trade.amount);
           });
         });
-        subscription = this.$.polo.subscribeTrades("ETH", "USDT");
-        subscription.on("data", data => {
+
+        subscription = this.$.polo.subscribeTrades('ETH', 'USDT');
+        subscription.on('data', data => {
           data.forEach(trade => {
-            this.$.ETHUSDT.addTransaction(
-              trade.type,
-              trade.timestamp,
-              trade.amount
-            );
+            this.$.poloethusd.addTransaction(trade.type, trade.timestamp, trade.amount);
+          });
+        });
+
+        subscription = this.$.polo.subscribeTrades('BTC', 'USDT');
+        subscription.on('data', data => {
+          data.forEach(trade => {
+            this.$.polobtcusd.addTransaction(trade.type, trade.timestamp, trade.amount);
           });
         });
 
@@ -61,23 +61,23 @@
         });*/
 
         // OKCoin
-        subscription = this.$.okcoin.subscribeTrades("CNY", "BTC");
-        subscription.on("data", data => {
-          console.log(data);
-        });
-
-        subscription = this.$.okcoin.subscribeOrderBook("CNY", "BTC");
-        subscription.on("data", data => {
-          data.forEach(order => {
-            console.log(
-              `${order.type === BUY
-                ? "BUY"
-                : "SELL"} ${order.price}: ${order.amount >= 0
-                ? "+" + order.amount
-                : order.amount}`
-            );
-          });
-        });
+        // subscription = this.$.okcoin.subscribeTrades("CNY", "BTC");
+        // subscription.on("data", data => {
+        //   console.log(data);
+        // });
+        //
+        // subscription = this.$.okcoin.subscribeOrderBook("CNY", "BTC");
+        // subscription.on("data", data => {
+        //   data.forEach(order => {
+        //     console.log(
+        //       `${order.type === BUY
+        //         ? "BUY"
+        //         : "SELL"} ${order.price}: ${order.amount >= 0
+        //         ? "+" + order.amount
+        //         : order.amount}`
+        //     );
+        //   });
+        // });
       }, 0);
     }
   }
