@@ -9,4 +9,3 @@ shell:
 production:
 	docker run -it --rm -v $$PWD:/app ruphin/webdev gulp
 	docker build -t ruphin/cryptodex .
-	docker push ruphin/cryptodex
