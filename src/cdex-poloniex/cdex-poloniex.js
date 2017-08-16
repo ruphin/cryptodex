@@ -1,11 +1,145 @@
 {
-  const BUY = Symbol.for("buy");
-  const SELL = Symbol.for("sell");
-  const ORDERS = Symbol.for("orders");
-  const TRADES = Symbol.for("trades");
-  // TODO: list all accepted coin pairs
-  const ACCEPTED_BASES = ["BTC", "ETH", "XMR", "USDT"];
-  const ACCEPTED_CURRENCIES = ['BTC', 'ETH', 'XMR', 'XRP', 'LTC', 'ETC']
+  const BUY = Symbol.for('buy');
+  const SELL = Symbol.for('sell');
+  const ORDERS = Symbol.for('orders');
+  const TRADES = Symbol.for('trades');
+  const FIAT = [
+    'EUR',
+    'AUD',
+    'BGN',
+    'BRL',
+    'CAD',
+    'CHF',
+    'CNY',
+    'CZK',
+    'DKK',
+    'GBP',
+    'HKD',
+    'HRK',
+    'HUF',
+    'IDR',
+    'ILS',
+    'INR',
+    'JPY',
+    'KRW',
+    'MXN',
+    'MYR',
+    'NOK',
+    'NZD',
+    'PHP',
+    'PLN',
+    'RON',
+    'RUB',
+    'SEK',
+    'SGD',
+    'THB',
+    'TRY',
+    'USD',
+    'ZAR'
+  ];
+  const PAIRS = {
+    BTC: {
+      ETH: 'BTC_ETH',
+      XRP: 'BTC_XRP',
+      LTC: 'BTC_LTC',
+      DGB: 'BTC_DGB',
+      DASH: 'BTC_DASH',
+      STR: 'BTC_STR',
+      BCH: 'BTC_BCH',
+      STRAT: 'BTC_STRAT',
+      SC: 'BTC_SC',
+      XEM: 'BTC_XEM',
+      XMR: 'BTC_XMR',
+      BTS: 'BTC_BTS',
+      ETC: 'BTC_ETC',
+      ZEC: 'BTC_ZEC',
+      FCT: 'BTC_FCT',
+      NXT: 'BTC_NXT',
+      GAME: 'BTC_GAME',
+      GNT: 'BTC_GNT',
+      MAID: 'BTC_MAID',
+      LBC: 'BTC_LBC',
+      DCR: 'BTC_DCR',
+      BURST: 'BTC_BURST',
+      LSK: 'BTC_LSK',
+      NEOS: 'BTC_NEOS',
+      BCN: 'BTC_BCN',
+      DOGE: 'BTC_DOGE',
+      REP: 'BTC_REP',
+      STEEM: 'BTC_STEEM',
+      CLAM: 'BTC_CLAM',
+      SJCX: 'BTC_SJCX',
+      ARDR: 'BTC_ARDR',
+      SYS: 'BTC_SYS',
+      GNO: 'BTC_GNO',
+      XCP: 'BTC_XCP',
+      BELA: 'BTC_BELA',
+      RADS: 'BTC_RADS',
+      EMC2: 'BTC_EMC2',
+      NMC: 'BTC_NMC',
+      NAUT: 'BTC_NAUT',
+      NXC: 'BTC_NXC',
+      VIA: 'BTC_VIA',
+      NAV: 'BTC_NAV',
+      OMNI: 'BTC_OMNI',
+      POT: 'BTC_POT',
+      NOTE: 'BTC_NOTE',
+      XBC: 'BTC_XBC',
+      AMP: 'BTC_AMP',
+      VTC: 'BTC_VTC',
+      PPC: 'BTC_PPC',
+      EXP: 'BTC_EXP',
+      FLDC: 'BTC_FLDC',
+      PASC: 'BTC_PASC',
+      BCY: 'BTC_BCY',
+      FLO: 'BTC_FLO',
+      BTM: 'BTC_BTM',
+      BTCD: 'BTC_BTCD',
+      PINK: 'BTC_PINK',
+      VRC: 'BTC_VRC',
+      BLK: 'BTC_BLK',
+      XPM: 'BTC_XPM',
+      GRC: 'BTC_GRC',
+      RIC: 'BTC_RIC',
+      XVC: 'BTC_XVC',
+      HUC: 'BTC_HUC',
+      SBD: 'BTC_SBD'
+    },
+    ETH: {
+      ZEC: 'ETH_ZEC',
+      GNO: 'ETH_GNO',
+      BCH: 'ETH_BCH',
+      GNT: 'ETH_GNT',
+      LSK: 'ETH_LSK',
+      REP: 'ETH_REP',
+      ETC: 'ETH_ETC',
+      STEEM: 'ETH_STEEM'
+    },
+    XMR: {
+      ZEC: 'XMR_ZEC',
+      DASH: 'XMR_DASH',
+      LTC: 'XMR_LTC',
+      NXT: 'XMR_NXT',
+      BCN: 'XMR_BCN',
+      MAID: 'XMR_MAID',
+      BLK: 'XMR_BLK',
+      BTCD: 'XMR_BTCD'
+    },
+    USD: {
+      BTC: 'USDT_BTC',
+      ETH: 'USDT_ETH',
+      DASH: 'USDT_DASH',
+      XRP: 'USDT_XRP',
+      LTC: 'USDT_LTC',
+      ETC: 'USDT_ETC',
+      BCH: 'USDT_BCH',
+      NXT: 'USDT_NXT',
+      ZEC: 'USDT_ZEC',
+      STR: 'USDT_STR',
+      XMR: 'USDT_XMR',
+      REP: 'USDT_REP'
+    }
+  };
 
   const MILLISECS = 1000;
 
@@ -16,7 +150,7 @@
 
   class CDexPoloniex extends CDexExchange {
     static get is() {
-      return "cdex-poloniex";
+      return 'cdex-poloniex';
     }
 
     _startSubscription(requestKey) {
@@ -41,61 +175,65 @@
     }
 
     _requestKey(subscription) {
-      let [requestBase, requestCurrency] = this.__getCoinOrder(subscription.base, subscription.currency);
-      let requestKey;
-      if (!ACCEPTED_CURRENCIES.includes(requestCurrency)) {
-        requestCurrency = requestBase;
-        requestBase = 'USDT';
-      }
-      requestKey = [requestBase, requestCurrency].join("_");
-      if (requestBase === 'USDT') {
-        requestBase = 'USD';
-      }
-      if (requestCurrency === 'USDT') {
-        requestCurrency = 'USD';
+      let base = subscription.base;
+      let currency = subscription.currency;
+      let key;
+      if (FIAT.includes(subscription.base)) {
+        base = 'USD';
+      } else if (FIAT.includes(subscription.currency)) {
+        base = 'USD';
+        currency = subscription.base;
       }
 
-      return [requestKey, requestBase, requestCurrency];
+      if (PAIRS[base] && PAIRS[base][currency]) {
+        key = PAIRS[base][currency];
+        [base, currency] = [currency, base];
+      } else if (PAIRS[currency] && PAIRS[currency][base]) {
+        key = PAIRS[currency][base];
+      } else {
+        throw 'Requested pair ${subscription.base} - ${subscription.currency} is not traded on Poloniex';
+      }
+      return [key, base, currency];
     }
 
     // PRIVATE
 
     __connect() {
-      console.info("Poloniex - connecting backend");
-      sock = new WebSocket("wss://api2.poloniex.com");
+      console.debug('Poloniex - connecting backend');
+      sock = new WebSocket('wss://api2.poloniex.com');
 
-      sock.addEventListener("open", () => {
-        console.info("Poloniex - connected");
+      sock.addEventListener('open', () => {
+        console.debug('Poloniex - connected');
         Object.keys(this._subscriptions).forEach(requestKey => {
           this.__subscribe(requestKey);
         });
       });
 
-      sock.addEventListener("close", () => {
-        console.error("Poloniex - connection closed");
+      sock.addEventListener('close', () => {
+        console.error('Poloniex - connection closed');
         sock = undefined;
         window.setTimeout(() => this.__connect(), 1000);
       });
 
-      sock.addEventListener("error", () => {
-        console.error("Poloniex - connection error");
+      sock.addEventListener('error', () => {
+        console.error('Poloniex - connection error');
         sock = undefined;
         window.setTimeout(() => this.__connect(), 1000);
       });
 
-      sock.addEventListener("message", msg => {
+      sock.addEventListener('message', msg => {
         this.__handleTransaction(JSON.parse(msg.data));
       });
     }
 
     __subscribe(requestKey) {
-      console.info(`Poloniex - subscribing to ${requestKey}`);
+      console.debug(`Poloniex - subscribing to ${requestKey}`);
       orderBooks[requestKey] = undefined;
       sock.send(`{"command":"subscribe","channel":"${requestKey}"}`);
     }
 
     __unsubscribe(requestKey) {
-      console.info(`Poloniex - unsubscribing from ${requestKey}`);
+      console.debug(`Poloniex - unsubscribing from ${requestKey}`);
       sock.send(`{"command":"unsubscribe","channel":"${requestKey}"}`);
     }
 
@@ -105,7 +243,7 @@
         return;
       }
       // Initial order book event
-      if (tx[2] && tx[2][0][0] === "i") {
+      if (tx[2] && tx[2][0][0] === 'i') {
         pairIds[tx[0]] = tx[2][0][1].currencyPair;
         let requestKey = pairIds[tx[0]];
         let orderBook = tx[2][0][1].orderBook;
@@ -116,9 +254,7 @@
       // Check message is expected
       let requestKey = pairIds[tx[0]];
       if (requestKey === undefined) {
-        console.error(
-          `Poloniex - message for undefined currency pair: ${tx[0]}`
-        );
+        console.error(`Poloniex - message for undefined currency pair: ${tx[0]}`);
         return;
       }
 
@@ -128,12 +264,12 @@
       events[TRADES] = [];
       tx[2].forEach(event => {
         switch (event[0]) {
-          case "t": // Trade event
+          case 't': // Trade event
             let tradeEvent = this.__processTradeEvent(event);
             events[TRADES].push(tradeEvent);
             break;
 
-          case "o": // Order book event
+          case 'o': // Order book event
             let orderEvent = this.__processOrderEvent(requestKey, event);
             events[ORDERS].push(orderEvent);
             break;
@@ -187,34 +323,6 @@
         this._requests[requestKey].forEach(subscription => {
           subscription.data(orderBooks[requestKey]);
         });
-      }
-    }
-
-    // Returns the coins in the order of importance.
-    __getCoinOrder(coin1, coin2) {
-      if (coin1 === "USDT") {
-        return [coin1, coin2];
-      }
-      if (coin2 === "USDT") {
-        return [coin2, coin1];
-      }
-      if (coin1 === "BTC") {
-        return [coin1, coin2];
-      }
-      if (coin2 === "BTC") {
-        return [coin2, coin1];
-      }
-      if (coin1 === "ETH") {
-        return [coin1, coin2];
-      }
-      if (coin2 === "ETH") {
-        return [coin2, coin1];
-      }
-      if (coin1 === "XMR") {
-        return [coin1, coin2];
-      }
-      if (coin2 === "XMR") {
-        return [coin2, coin1];
       }
     }
   }

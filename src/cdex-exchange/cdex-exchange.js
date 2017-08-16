@@ -1,6 +1,6 @@
 {
-  const TRADES = Symbol.for("trades");
-  const ORDERS = Symbol.for("orders");
+  const TRADES = Symbol.for('trades');
+  const ORDERS = Symbol.for('orders');
 
   // This Class is designed to be extended by implementation for each exchange.
   // Each exchange must implement the following methods:
@@ -61,17 +61,13 @@
     // This is the default implementation that simply coerces all relevant properties
     // Most exchanges will want to override this
     _requestKey(subscription) {
-      return `${subscription.base}_${subscription.currency}_${String(
-        subscription.type
-      )}`;
+      return [`${subscription.base}_${subscription.currency}_${String(subscription.type)}`, subscription.base, subscription.currency];
     }
 
     __fudgeSubscription(subscription) {
-      let [requestKey, requestBase, requestCurrency] = this._requestKey(
-        subscription
-      );
-      let convert = this.__getConvertFunction(requestBase, requestCurrency, subscription);
-      Object.assign(subscription, { requestKey, requestBase, requestCurrency, convert });
+      let [requestKey, requestBase, requestCurrency] = this._requestKey(subscription);
+      Object.assign(subscription, { requestKey, requestBase, requestCurrency });
+      subscription.convert = this.__getConvertFunction(subscription);
 
       if (this._subscriptions[requestKey]) {
         // This requestKey already has subscriptions, so just add this one to the list
@@ -84,11 +80,9 @@
     }
 
     __fudgeRequest(subscription) {
-      let [requestKey, requestBase, requestCurrency] = this._requestKey(
-        subscription
-      );
-      let convert = this.__getConvertFunction(requestBase, requestCurrency, subscription);
-      Object.assign(subscription, { requestKey, requestBase, requestCurrency, convert });
+      let [requestKey, requestBase, requestCurrency] = this._requestKey(subscription);
+      Object.assign(subscription, { requestKey, requestBase, requestCurrency });
+      subscription.convert = this.__getConvertFunction(subscription);
 
       if (this._requests[requestKey]) {
         // This requestKey already has subscriptions, so just add this one to the list
@@ -105,11 +99,11 @@
     // Assumed is the user subscription contains at least one crypto currency the exchange supports.
     //
     // TODO: refactor (including the conversion functions) to separate location.
-    __getConvertFunction(requestBase, requestCurrency, subscription) {
-      let basesMatch = requestBase === subscription.base;
-      let currenciesMatch = requestCurrency === subscription.currency;
-      let requestBaseMatchCurrency = requestBase === subscription.currency;
-      let requestCurrencyMatchBase = requestCurrency === subscription.base;
+    __getConvertFunction(subscription) {
+      let basesMatch = subscription.requestBase === subscription.base;
+      let currenciesMatch = subscription.requestCurrency === subscription.currency;
+      let requestBaseMatchCurrency = subscription.requestBase === subscription.currency;
+      let requestCurrencyMatchBase = subscription.requestCurrency === subscription.base;
       if (basesMatch && currenciesMatch) {
         // No conversion needed
         return noopFunc;
@@ -120,39 +114,39 @@
         // A currency conversion is needed
         let currencyFrom, currencyTo;
         if (basesMatch) {
-          currencyFrom = requestCurrency;
+          currencyFrom = subscription.requestCurrency;
           currencyTo = subscription.currency;
         } else {
-          currencyFrom = requestBase;
+          currencyFrom = subscription.requestBase;
           currencyTo = subscription.base;
         }
-        let rateKey = setRateCache(currencyFrom, currencyTo);
-        return (events) => {
+        let rate = getRate(currencyFrom, currencyTo);
+        return events => {
           if (currenciesMatch) {
-            return currencyConversionAndConvertBaseFunc(events, rateKey);
+            return currencyConversionAndConvertBaseFunc(events, rate);
           } else {
-            return currencyConversionFunc(events, rateKey);
+            return currencyConversionFunc(events, rate);
           }
-        }
+        };
       } else {
         // The base needs to be switched and the currency converted
         let currencyFrom, currencyTo;
         if (requestBaseMatchCurrency) {
-          currencyFrom = requestCurrency;
+          currencyFrom = subscription.requestCurrency;
           currencyTo = subscription.base;
         } else {
-          currencyFrom = requestBase;
+          currencyFrom = subscription.requestBase;
           currencyTo = subscription.currency;
         }
-        let rateKey = setRateCache(currencyFrom, currencyTo);
+        let rate = getRate(currencyFrom, currencyTo);
         if (requestBaseMatchCurrency) {
-          return (events) => {
-            return switchBaseCurrencyConversionAndConvertBaseFunc(events, rateKey);
-          }
+          return events => {
+            return switchBaseCurrencyConversionAndConvertBaseFunc(events, rate);
+          };
         } else {
-          return (events) => {
-            return switchBaseAndCurrencyConversionFunc(events, rateKey);
-          }
+          return events => {
+            return switchBaseAndCurrencyConversionFunc(events, rate);
+          };
         }
       }
     }
@@ -176,10 +170,7 @@
       // Register the handler
       this.handlers[eventType].push(handler);
       // If this is the first handler for an event type and the cache for this event type is not empty
-      if (
-        this.handlers[eventType].length === 1 &&
-        this._cache[eventType] >= 0
-      ) {
+      if (this.handlers[eventType].length === 1 && this._cache[eventType] >= 0) {
         // Fire the handler for each item in the cache
         this._cache[eventType].forEach(payload => {
           __processEvent(eventType, payload);
@@ -191,12 +182,12 @@
 
     // This is called by exchanges to pass data to the subscriber
     data(data) {
-      this.__processEvent("data", data);
+      this.__processEvent('data', data);
     }
 
     // This is called by exchanges to notify the subscriber of errors
     error(error) {
-      this.__processEvent("error", error);
+      this.__processEvent('error', error);
     }
 
     __processEvent(type, payload) {
@@ -212,63 +203,50 @@
 
   // FIAT RATES
 
-  let rates;
-  let rateCache = {};
+  const rates = { EUR: 1 };
   // Get the latest Fiat rates from fixer.io
-  const refreshRates = function() {
+  const fetchRates = function() {
     fetch('http://api.fixer.io/latest')
-      .then(r => {return r.json();})
+      .then(r => {
+        return r.json();
+      })
       .then(data => {
-        console.info('Refreshing Fiat rates');
-        rates = data.rates;
-        rates['EUR'] = 1;
-        refreshRateCache();
+        console.debug('Setting fiat rates');
+        Object.assign(rates, data.rates);
       });
-  }
+  };
 
-  // Refresh the rate cache with new values
-  const refreshRateCache = function() {
-    for(let key in rateCache) {
-      if (rateCache.hasOwnProperty(key)) {
-        let [currencyFrom, currencyTo] = /([^_]+)_([^_]+)/.exec(key).slice(1);
-        rateCache[key] = (rates[currencyTo] / rates[currencyFrom]);
-      }
-    }
-  }
-
-  // Set a rate between two currencies in the cache. Returns the key used to access the rate.
-  const setRateCache = function(currencyFrom, currencyTo) {
-    if (rates === undefined) {
-      throw 'Cannot subscribe, rates not set yet';
-    }
+  const getRate = function(currencyFrom, currencyTo) {
     if (rates[currencyFrom] === undefined) {
       throw `No rate set for ${currencyFrom}`;
     }
     if (rates[currencyTo] === undefined) {
       throw `No rate set for ${currencyTo}`;
     }
-    let rateKey = `${currencyFrom}_${currencyTo}`;
-    rateCache[rateKey] = (rates[currencyTo] / rates[currencyFrom]);
-    return rateKey;
-  }
+    return rates[currencyTo] / rates[currencyFrom];
+  };
 
   // Get the current rates
-  refreshRates();
+  fetchRates();
 
-  // Fiat rates reset daily around 4 PM CET.
-  let now = new Date();
-  let millisTillRefresh = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 16, 20, 0, 0) - now;
-  if (millisTillRefresh < 0) {
-       millisTillRefresh += 86400000; // refresh happened today already, refresh tomorrow
-  }
-  window.setTimeout(() => {
-    refreshRates();
-    // After the refresh, keep refreshing daily as long as the window is open.
-    window.setInterval(() => {
-      refreshRates();
-    }, 86400000);
-  }, millisTillRefresh);
+  // // Refresh rates every 24 hours
+  // window.setInterval(() => {
+  //   refreshRates();
+  // }, 1000 * 60 * 60 * 24);
 
+  // // Fiat rates reset daily around 4 PM CET.
+  // let now = new Date();
+  // let millisTillRefresh = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 16, 20, 0, 0) - now;
+  // if (millisTillRefresh < 0) {
+  //   millisTillRefresh += 86400000; // refresh happened today already, refresh tomorrow
+  // }
+  // window.setTimeout(() => {
+  //   refreshRates();
+  //   // After the refresh, keep refreshing daily as long as the window is open.
+  //   window.setInterval(() => {
+  //     refreshRates();
+  //   }, 86400000);
+  // }, millisTillRefresh);
 
   // CONVERSION FUNCTIONS
 
@@ -282,43 +260,40 @@
         type: event.type,
         timestamp: event.timestamp,
         amount: event.amount * event.price,
-        price: 1 / event.price,
+        price: 1 / event.price
       };
     });
   };
 
-  const currencyConversionFunc = function(events, rateKey) {
-    let multiplier = rateCache[rateKey];
+  const currencyConversionFunc = function(events, rate) {
     return events.map(event => {
       return {
         type: event.type,
         timestamp: event.timestamp,
-        price: event.price * multiplier,
+        price: event.price * rate,
         amount: event.amount
-      }
+      };
     });
   };
 
-  const currencyConversionAndConvertBaseFunc = function(events, rateKey) {
-    let multiplier = rateCache[rateKey];
+  const currencyConversionAndConvertBaseFunc = function(events, rate) {
     return events.map(event => {
       return {
         type: event.type,
         timestamp: event.timestamp,
-        price: event.price * multiplier,
-        amount: event.amount / multiplier
-      }
+        price: event.price * rate,
+        amount: event.amount / rate
+      };
     });
   };
 
-  const switchBaseAndCurrencyConversionFunc = function(events, rateKey) {
-    return currencyConversionFunc(switchBaseFunc(events), rateKey);
+  const switchBaseAndCurrencyConversionFunc = function(events, rate) {
+    return currencyConversionFunc(switchBaseFunc(events), rate);
   };
 
-  const switchBaseCurrencyConversionAndConvertBaseFunc = function(events, rateKey) {
-    return currencyConversionAndConvertBaseFunc(switchBaseFunc(events), rateKey);
+  const switchBaseCurrencyConversionAndConvertBaseFunc = function(events, rate) {
+    return currencyConversionAndConvertBaseFunc(switchBaseFunc(events), rate);
   };
-
 
   window.CDexExchange = CDexExchange;
 }

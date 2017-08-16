@@ -23,14 +23,14 @@
           });
         });
 
-        subscription = this.$.polo.subscribeTrades('ETH', 'USDT');
+        subscription = this.$.polo.subscribeTrades('ETH', 'EUR');
         subscription.on('data', data => {
           data.forEach(trade => {
             this.$.poloethusd.addTransaction(trade.type, trade.timestamp, trade.amount);
           });
         });
 
-        subscription = this.$.polo.subscribeTrades('BTC', 'USDT');
+        subscription = this.$.polo.subscribeTrades('BTC', 'EUR');
         subscription.on('data', data => {
           data.forEach(trade => {
             this.$.polobtcusd.addTransaction(trade.type, trade.timestamp, trade.amount);
@@ -63,7 +63,7 @@
         });*/
 
         // OKCoin
-        
+
         // subscription = this.$.okcoin.subscribeTrades("CNY", "BTC");
         // subscription.on("data", data => {
         //   console.log(data);
