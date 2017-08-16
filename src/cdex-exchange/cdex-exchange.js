@@ -64,6 +64,18 @@
       return [`${subscription.base}_${subscription.currency}_${String(subscription.type)}`, subscription.base, subscription.currency];
     }
 
+    // Send the events to subscriptions for the given requestKey and of the given type
+    // TODO: rename
+    _sendData(events, requestKey, type) {
+      let subscriptions = this._subscriptions[requestKey].filter(subscription => {
+        return subscription.type === type;
+      });
+      subscriptions.forEach(subscription => {
+        let result = subscription.convert(events);
+        subscription.data(result);
+      });
+    }
+
     __fudgeSubscription(subscription) {
       let [requestKey, requestBase, requestCurrency] = this._requestKey(subscription);
       Object.assign(subscription, { requestKey, requestBase, requestCurrency });

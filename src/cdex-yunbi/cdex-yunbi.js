@@ -100,13 +100,7 @@
               timestamp: new Date(Number(trade.date) * MILLISECS)
             };
           });
-          let subscriptions = this._subscriptions[requestKey].filter(subscription => {
-            return subscription.type === TRADES;
-          });
-          subscriptions.forEach(subscription => {
-            let result = subscription.convert(trades);
-            subscription.data(result);
-          });
+          this._sendData(trades, requestKey, TRADES);
           return;
         case 'update':
           // TODO: find difference between current and last orderbook and notify subscribers of the difference.
@@ -114,7 +108,7 @@
           this.__sendInitialOrderBook(requestKey);
           return;
         default:
-          // ignore
+        // ignore
       }
     }
 
@@ -126,7 +120,7 @@
         });
       }
     }
-    
+
     // Returns the coins in the order of importance according to this exchange.
     __getCoinOrder(coin1, coin2) {
       if (ACCEPTED_BASES.includes(coin1)) {
@@ -135,7 +129,7 @@
       if (ACCEPTED_BASES.includes(coin2)) {
         return [coin2, coin1];
       }
-      throw `No accepted base found in ${coin1}-${coin2}. Accepted are: ${ACCEPTED_BASES.join(', ')}`
+      throw `No accepted base found in ${coin1}-${coin2}. Accepted are: ${ACCEPTED_BASES.join(', ')}`;
     }
   }
 
