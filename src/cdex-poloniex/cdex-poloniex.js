@@ -38,107 +38,72 @@
     'ZAR'
   ];
   const PAIRS = {
-    BTC: {
-      ETH: 'BTC_ETH',
-      XRP: 'BTC_XRP',
-      LTC: 'BTC_LTC',
-      DGB: 'BTC_DGB',
-      DASH: 'BTC_DASH',
-      STR: 'BTC_STR',
-      BCH: 'BTC_BCH',
-      STRAT: 'BTC_STRAT',
-      SC: 'BTC_SC',
-      XEM: 'BTC_XEM',
-      XMR: 'BTC_XMR',
-      BTS: 'BTC_BTS',
-      ETC: 'BTC_ETC',
-      ZEC: 'BTC_ZEC',
-      FCT: 'BTC_FCT',
-      NXT: 'BTC_NXT',
-      GAME: 'BTC_GAME',
-      GNT: 'BTC_GNT',
-      MAID: 'BTC_MAID',
-      LBC: 'BTC_LBC',
-      DCR: 'BTC_DCR',
-      BURST: 'BTC_BURST',
-      LSK: 'BTC_LSK',
-      NEOS: 'BTC_NEOS',
-      BCN: 'BTC_BCN',
-      DOGE: 'BTC_DOGE',
-      REP: 'BTC_REP',
-      STEEM: 'BTC_STEEM',
-      CLAM: 'BTC_CLAM',
-      SJCX: 'BTC_SJCX',
-      ARDR: 'BTC_ARDR',
-      SYS: 'BTC_SYS',
-      GNO: 'BTC_GNO',
-      XCP: 'BTC_XCP',
-      BELA: 'BTC_BELA',
-      RADS: 'BTC_RADS',
-      EMC2: 'BTC_EMC2',
-      NMC: 'BTC_NMC',
-      NAUT: 'BTC_NAUT',
-      NXC: 'BTC_NXC',
-      VIA: 'BTC_VIA',
-      NAV: 'BTC_NAV',
-      OMNI: 'BTC_OMNI',
-      POT: 'BTC_POT',
-      NOTE: 'BTC_NOTE',
-      XBC: 'BTC_XBC',
-      AMP: 'BTC_AMP',
-      VTC: 'BTC_VTC',
-      PPC: 'BTC_PPC',
-      EXP: 'BTC_EXP',
-      FLDC: 'BTC_FLDC',
-      PASC: 'BTC_PASC',
-      BCY: 'BTC_BCY',
-      FLO: 'BTC_FLO',
-      BTM: 'BTC_BTM',
-      BTCD: 'BTC_BTCD',
-      PINK: 'BTC_PINK',
-      VRC: 'BTC_VRC',
-      BLK: 'BTC_BLK',
-      XPM: 'BTC_XPM',
-      GRC: 'BTC_GRC',
-      RIC: 'BTC_RIC',
-      XVC: 'BTC_XVC',
-      HUC: 'BTC_HUC',
-      SBD: 'BTC_SBD'
-    },
-    ETH: {
-      ZEC: 'ETH_ZEC',
-      GNO: 'ETH_GNO',
-      BCH: 'ETH_BCH',
-      GNT: 'ETH_GNT',
-      LSK: 'ETH_LSK',
-      REP: 'ETH_REP',
-      ETC: 'ETH_ETC',
-      STEEM: 'ETH_STEEM'
-    },
-    XMR: {
-      ZEC: 'XMR_ZEC',
-      DASH: 'XMR_DASH',
-      LTC: 'XMR_LTC',
-      NXT: 'XMR_NXT',
-      BCN: 'XMR_BCN',
-      MAID: 'XMR_MAID',
-      BLK: 'XMR_BLK',
-      BTCD: 'XMR_BTCD'
-    },
-    USD: {
-      BTC: 'USDT_BTC',
-      ETH: 'USDT_ETH',
-      DASH: 'USDT_DASH',
-      XRP: 'USDT_XRP',
-      LTC: 'USDT_LTC',
-      ETC: 'USDT_ETC',
-      BCH: 'USDT_BCH',
-      NXT: 'USDT_NXT',
-      ZEC: 'USDT_ZEC',
-      STR: 'USDT_STR',
-      XMR: 'USDT_XMR',
-      REP: 'USDT_REP'
-    }
+    BTC: { USD: 'USDT_BTC' },
+    ETH: { BTC: 'BTC_ETH', USD: 'USDT_ETH' },
+    XRP: { BTC: 'BTC_XRP', USD: 'USDT_XRP' },
+    LTC: { BTC: 'BTC_LTC', XMR: 'XMR_LTC', USD: 'USDT_LTC' },
+    DGB: { BTC: 'BTC_DGB' },
+    DASH: { BTC: 'BTC_DASH', XMR: 'XMR_DASH', USD: 'USDT_DASH' },
+    STR: { BTC: 'BTC_STR', USD: 'USDT_STR' },
+    BCH: { BTC: 'BTC_BCH', ETH: 'ETH_BCH', USD: 'USDT_BCH' },
+    STRAT: { BTC: 'BTC_STRAT' },
+    SC: { BTC: 'BTC_SC' },
+    XEM: { BTC: 'BTC_XEM' },
+    XMR: { BTC: 'BTC_XMR', USD: 'USDT_XMR' },
+    BTS: { BTC: 'BTC_BTS' },
+    ETC: { BTC: 'BTC_ETC', ETH: 'ETH_ETC', USD: 'USDT_ETC' },
+    ZEC: { BTC: 'BTC_ZEC', ETH: 'ETH_ZEC', XMR: 'XMR_ZEC', USD: 'USDT_ZEC' },
+    FCT: { BTC: 'BTC_FCT' },
+    NXT: { BTC: 'BTC_NXT', XMR: 'XMR_NXT', USD: 'USDT_NXT' },
+    GAME: { BTC: 'BTC_GAME' },
+    GNT: { BTC: 'BTC_GNT', ETH: 'ETH_GNT' },
+    MAID: { BTC: 'BTC_MAID', XMR: 'XMR_MAID' },
+    LBC: { BTC: 'BTC_LBC' },
+    DCR: { BTC: 'BTC_DCR' },
+    BURST: { BTC: 'BTC_BURST' },
+    LSK: { BTC: 'BTC_LSK', ETH: 'ETH_LSK' },
+    NEOS: { BTC: 'BTC_NEOS' },
+    BCN: { BTC: 'BTC_BCN', XMR: 'XMR_BCN' },
+    DOGE: { BTC: 'BTC_DOGE' },
+    REP: { BTC: 'BTC_REP', ETH: 'ETH_REP', USD: 'USDT_REP' },
+    STEEM: { BTC: 'BTC_STEEM', ETH: 'ETH_STEEM' },
+    CLAM: { BTC: 'BTC_CLAM' },
+    SJCX: { BTC: 'BTC_SJCX' },
+    ARDR: { BTC: 'BTC_ARDR' },
+    SYS: { BTC: 'BTC_SYS' },
+    GNO: { BTC: 'BTC_GNO', ETH: 'ETH_GNO' },
+    XCP: { BTC: 'BTC_XCP' },
+    BELA: { BTC: 'BTC_BELA' },
+    RADS: { BTC: 'BTC_RADS' },
+    EMC2: { BTC: 'BTC_EMC2' },
+    NMC: { BTC: 'BTC_NMC' },
+    NAUT: { BTC: 'BTC_NAUT' },
+    NXC: { BTC: 'BTC_NXC' },
+    VIA: { BTC: 'BTC_VIA' },
+    NAV: { BTC: 'BTC_NAV' },
+    OMNI: { BTC: 'BTC_OMNI' },
+    POT: { BTC: 'BTC_POT' },
+    NOTE: { BTC: 'BTC_NOTE' },
+    XBC: { BTC: 'BTC_XBC' },
+    AMP: { BTC: 'BTC_AMP' },
+    VTC: { BTC: 'BTC_VTC' },
+    PPC: { BTC: 'BTC_PPC' },
+    EXP: { BTC: 'BTC_EXP' },
+    FLDC: { BTC: 'BTC_FLDC' },
+    PASC: { BTC: 'BTC_PASC' },
+    BCY: { BTC: 'BTC_BCY' },
+    FLO: { BTC: 'BTC_FLO' },
+    BTM: { BTC: 'BTC_BTM' },
+    BTCD: { BTC: 'BTC_BTCD', XMR: 'XMR_BTCD' },
+    PINK: { BTC: 'BTC_PINK' },
+    VRC: { BTC: 'BTC_VRC' },
+    BLK: { BTC: 'BTC_BLK', XMR: 'XMR_BLK' },
+    XPM: { BTC: 'BTC_XPM' },
+    GRC: { BTC: 'BTC_GRC' },
+    RIC: { BTC: 'BTC_RIC' },
+    XVC: { BTC: 'BTC_XVC' },
+    HUC: { BTC: 'BTC_HUC' },
+    SBD: { BTC: 'BTC_SBD' }
   };
 
   const MILLISECS = 1000;
@@ -179,17 +144,17 @@
       let currency = subscription.currency;
       let key;
       if (FIAT.includes(subscription.base)) {
-        base = 'USD';
+        currency = 'USD';
+        base = subscription.currency;
       } else if (FIAT.includes(subscription.currency)) {
-        base = 'USD';
-        currency = subscription.base;
+        currency = 'USD';
       }
 
       if (PAIRS[base] && PAIRS[base][currency]) {
         key = PAIRS[base][currency];
-        [base, currency] = [currency, base];
       } else if (PAIRS[currency] && PAIRS[currency][base]) {
         key = PAIRS[currency][base];
+        [base, currency] = [currency, base];
       } else {
         throw 'Requested pair ${subscription.base} - ${subscription.currency} is not traded on Poloniex';
       }
@@ -254,7 +219,9 @@
       // Check message is expected
       let requestKey = pairIds[tx[0]];
       if (requestKey === undefined) {
-        console.error(`Poloniex - message for undefined currency pair: ${tx[0]}`);
+        console.error(
+          `Poloniex - message for undefined currency pair: ${tx[0]}`
+        );
         return;
       }
 
