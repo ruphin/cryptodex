@@ -206,7 +206,7 @@
   const rates = { EUR: 1 };
   // Get the latest Fiat rates from fixer.io
   const fetchRates = function() {
-    fetch('http://api.fixer.io/latest')
+    fetch('//api.fixer.io/latest')
       .then(r => {
         return r.json();
       })
