@@ -11,8 +11,6 @@
   const DAY = 24 * HOUR;
   const HOUR_DIFF = 6;
 
-  const orderBooks = {};
-
   let sock;
 
   class CDexOkcoin extends CDexExchange {
@@ -36,9 +34,8 @@
     }
 
     _startRequest(requestKey) {
-      // Fire a single request with the key and push the response to this._requests[requestKey]
-      if (orderBooks[requestKey] !== undefined) {
-        this.__sendInitialOrderBook(requestKey);
+      if (this._orderBooks[requestKey] !== undefined) {
+        this._sendOrderBook(requestKey);
       }
     }
 
@@ -98,7 +95,7 @@
 
     __subscribe(requestKey) {
       console.info(`Okcoin - subscribing to ${requestKey}`);
-      orderBooks[requestKey] = undefined;
+      this._orderBooks[requestKey] = undefined;
       sock.send(`{event: "addChannel", channel: "ok_sub_spot_${requestKey}"}`);
     }
 
@@ -127,9 +124,9 @@
       if (channel.endsWith('depth')) {
         requestKey = /ok_sub_spot_(\w+)/.exec(channel)[1];
         // First message is the initial order book
-        if (orderBooks[requestKey] === undefined) {
-          orderBooks[requestKey] = data;
-          this.__sendInitialOrderBook(requestKey);
+        if (this._orderBooks[requestKey] === undefined) {
+          this._orderBooks[requestKey] = this.__processInitialOrderBook(data);
+          this._sendOrderBook(requestKey);
           return;
         }
 
@@ -149,12 +146,24 @@
       });
     }
 
+    // Transform the OKCoin orderBook to the CDexExchange format.
+    __processInitialOrderBook(data) {
+      let orderBook = {};
+      let reduceFunc = (obj, value) => {
+        obj[value[0]] = value[1];
+        return obj;
+      };
+      orderBook[BUY] = data.bids.reduce(reduceFunc, {});
+      orderBook[SELL] = data.asks.reduce(reduceFunc, {});
+      return orderBook;
+    }
+
     __processOrderEvent(requestKey, event) {
       let sellEvents = event.asks.map(event => {
         let type = SELL;
         let price = event[0];
         let newAmount = event[1];
-        let amount = this.__updateOrderBook(orderBooks[requestKey].asks, price, newAmount);
+        let amount = this._updateOrderBook(this._orderBooks[requestKey][type], price, newAmount);
         return { price, amount, type };
       });
 
@@ -162,29 +171,11 @@
         let type = BUY;
         let price = event[0];
         let newAmount = event[1];
-        let amount = this.__updateOrderBook(orderBooks[requestKey].bids, price, newAmount);
+        let amount = this._updateOrderBook(this._orderBooks[requestKey][type], price, newAmount);
         return { price, amount, type };
       });
 
       return sellEvents.concat(buyEvents);
-    }
-
-    __updateOrderBook(orderBook, price, newAmount) {
-      let oldAmount = orderBook[price];
-      if (oldAmount === undefined) {
-        oldAmount = 0;
-      }
-      let amountDiff = newAmount - oldAmount;
-      orderBook[price] = newAmount;
-      return amountDiff;
-    }
-
-    __sendInitialOrderBook(requestKey) {
-      if (this._requests[requestKey] !== undefined) {
-        this._requests[requestKey].forEach(subscription => {
-          subscription.data(orderBooks[requestKey]);
-        });
-      }
     }
 
     // OKCoin sends the timestamp in an awkward format, convert it to a Date.

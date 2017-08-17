@@ -105,11 +105,8 @@
     HUC: { BTC: 'BTC_HUC' },
     SBD: { BTC: 'BTC_SBD' }
   };
-
   const MILLISECS = 1000;
-
   const pairIds = {};
-  const orderBooks = {};
 
   let sock;
 
@@ -135,7 +132,7 @@
 
     _startRequest(requestKey) {
       if (orderBooks[requestKey] !== undefined) {
-        this.__sendInitialOrderBook(requestKey);
+        this._sendOrderBook(requestKey);
       }
     }
 
@@ -193,7 +190,7 @@
 
     __subscribe(requestKey) {
       console.debug(`Poloniex - subscribing to ${requestKey}`);
-      orderBooks[requestKey] = undefined;
+      this._orderBooks[requestKey] = undefined;
       sock.send(`{"command":"subscribe","channel":"${requestKey}"}`);
     }
 
@@ -211,17 +208,14 @@
       if (tx[2] && tx[2][0][0] === 'i') {
         pairIds[tx[0]] = tx[2][0][1].currencyPair;
         let requestKey = pairIds[tx[0]];
-        let orderBook = tx[2][0][1].orderBook;
-        orderBooks[requestKey] = orderBook;
-        this.__sendInitialOrderBook(requestKey);
+        this._orderBooks[requestKey] = this.__processInitialOrderBook(tx[2][0][1].orderBook);
+        this._sendOrderBook(requestKey);
         return;
       }
       // Check message is expected
       let requestKey = pairIds[tx[0]];
       if (requestKey === undefined) {
-        console.error(
-          `Poloniex - message for undefined currency pair: ${tx[0]}`
-        );
+        console.error(`Poloniex - message for undefined currency pair: ${tx[0]}`);
         return;
       }
 
@@ -263,7 +257,6 @@
       let price = Number(event[3]);
       let amount = Number(event[4]);
       let type = event[2] === 1 ? BUY : SELL;
-
       let timestamp = new Date(Number(event[5]) * MILLISECS);
       return { type, timestamp, amount, price };
     }
@@ -271,26 +264,22 @@
     __processOrderEvent(requestKey, event) {
       let price = Number(event[2]);
       let newAmount = Number(event[3]);
-      let typeIndex = event[1];
-      let type = typeIndex === 1 ? BUY : SELL;
-
-      let orderBook = orderBooks[requestKey];
-      let oldAmount = orderBook[typeIndex][price];
-      if (oldAmount === undefined) {
-        oldAmount = 0;
-      }
-      let amount = newAmount - oldAmount;
-      orderBook[typeIndex][price] = newAmount;
-
+      let type = event[1] === 1 ? BUY : SELL;
+      let orderBook = this._orderBooks[requestKey][type];
+      let amount = this._updateOrderBook(orderBook, price, newAmount);
       return { type, amount, price };
     }
 
-    __sendInitialOrderBook(requestKey) {
-      if (this._requests[requestKey] !== undefined) {
-        this._requests[requestKey].forEach(subscription => {
-          subscription.data(orderBooks[requestKey]);
-        });
-      }
+    __processInitialOrderBook(data) {
+      let orderBook = {};
+      data.forEach(obj => {
+        for (let key in obj) {
+          obj[key] = Number(obj[key]);
+        }
+      });
+      orderBook[BUY] = data[1];
+      orderBook[SELL] = data[0];
+      return orderBook;
     }
   }
 

@@ -7,8 +7,6 @@
   const ACCEPTED_BASES = ['BTC', 'ETH', 'ETC'];
   const MILLISECS = 1000;
 
-  const orderBooks = {};
-
   let sock;
 
   class CDexYunbi extends CDexExchange {
@@ -33,7 +31,7 @@
 
     _startRequest(requestKey) {
       if (orderBooks[requestKey] !== undefined) {
-        this.__sendInitialOrderBook(requestKey);
+        this._sendOrderBook(requestKey);
       }
     }
 
@@ -77,7 +75,7 @@
 
     __subscribe(sock, requestKey) {
       console.info(`Yunbi - subscribing to ${requestKey}`);
-      orderBooks[requestKey] = undefined;
+      this._orderBooks[requestKey] = undefined;
       sock.send(`{"event": "pusher:subscribe", "data": {"channel": "${requestKey}"}}`);
     }
 
@@ -104,21 +102,25 @@
           return;
         case 'update':
           // TODO: find difference between current and last orderbook and notify subscribers of the difference.
-          orderBooks[requestKey] = data;
-          this.__sendInitialOrderBook(requestKey);
+          if (this._orderBooks[requestKey] === undefined) {
+            this._orderBooks[requestKey] = this.__processInitialOrderBook(data);
+            this._sendOrderBook(requestKey);
+          }
           return;
         default:
         // ignore
       }
     }
 
-    // TODO: Shared with Poloniex
-    __sendInitialOrderBook(requestKey) {
-      if (this._requests[requestKey] !== undefined) {
-        this._requests[requestKey].forEach(subscription => {
-          subscription.data(orderBooks[requestKey]);
-        });
-      }
+    __processInitialOrderBook(data) {
+      let orderBook = {};
+      let reduceFunc = (obj, value) => {
+        obj[value[0]] = value[1];
+        return obj;
+      };
+      orderBook[BUY] = data.bids.reduce(reduceFunc, {});
+      orderBook[SELL] = data.asks.reduce(reduceFunc, {});
+      return orderBook;
     }
 
     // Returns the coins in the order of importance according to this exchange.

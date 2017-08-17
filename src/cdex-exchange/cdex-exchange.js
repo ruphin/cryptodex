@@ -27,8 +27,10 @@
       // Initialize class singletons for subscriptions and requests
       this.constructor.__subscriptions = this.constructor.__subscriptions || {};
       this.constructor.__requests = this.constructor.__requests || {};
+      this.constructor.__orderBooks = this.constructor.__orderBooks || {};
       this._subscriptions = this.constructor.__subscriptions;
       this._requests = this.constructor.__requests;
+      this._orderBooks = this.constructor.__orderBooks;
     }
 
     getOrderBook(base, currency) {
@@ -67,13 +69,39 @@
     // Send the events to subscriptions for the given requestKey and of the given type
     // TODO: rename
     _sendData(events, requestKey, type) {
-      let subscriptions = this._subscriptions[requestKey].filter(subscription => {
-        return subscription.type === type;
-      });
-      subscriptions.forEach(subscription => {
-        let result = subscription.convert(events);
-        subscription.data(result);
-      });
+      this._subscriptions[requestKey]
+        .filter(subscription => {
+          return subscription.type === type;
+        })
+        .forEach(subscription => {
+          let result = subscription.convert(events);
+          subscription.data(result);
+        });
+    }
+
+    // Sends the order book to the requestors.
+    _sendOrderBook(requestKey) {
+      if (this._requests[requestKey] !== undefined) {
+        this._requests[requestKey]
+          .filter(subscription => {
+            return subscription.type === ORDERS;
+          })
+          .forEach(subscription => {
+            // TODO: convert order book to correct base and currency.
+            subscription.data(orderBooks[requestKey]);
+          });
+      }
+    }
+
+    // Update the given order book's price to the newAmount and return the difference.
+    _updateOrderBook(orderBook, price, newAmount) {
+      let oldAmount = orderBook[price];
+      if (oldAmount === undefined) {
+        oldAmount = 0;
+      }
+      let amountDiff = newAmount - oldAmount;
+      orderBook[price] = newAmount;
+      return amountDiff;
     }
 
     __fudgeSubscription(subscription) {
