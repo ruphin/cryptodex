@@ -10,7 +10,7 @@
   justify-content: flex-start;
 }
 .bar {
-  width: 2px;
+  width: 1px;
   position: relative;
 }
 .bar::after {
@@ -24,7 +24,7 @@
 }
 
 .bar:hover::after {
-  background: rgba(0,0,0,0.1);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 #timeCounter {

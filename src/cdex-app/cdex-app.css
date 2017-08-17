@@ -1,13 +1,6 @@
-body {
-  --chart-height: 260px;
-  margin: 0;
-  padding: 30px;
-}
-
-#charts {
-  display: flex;
-  flex-flow: row;
-  flex-wrap: wrap;
+.pair {
+  display: inline-flex;
+  flex-flow: column;
 }
 
 crypto-volume-chart {

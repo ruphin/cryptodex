@@ -6,12 +6,24 @@
 <link rel="import" href="../cdex-okcoin/cdex-okcoin.html">
 
 <template id="cdex-app-template">
-  <cdex-volume-chart id="poloethusd"></cdex-volume-chart>
-  <cdex-volume-chart id="poloethbtc"></cdex-volume-chart>
-  <cdex-volume-chart id="polobtcusd"></cdex-volume-chart>
+  <link rel="stylesheet" href="/cdex-app/cdex-app.css">
+  <div class="pair">
+    <h2>ETH - EUR</h2>
+    <cdex-volume-chart id="poloetheur"></cdex-volume-chart>
+    <cdex-volume-chart id="okcoinetheur"></cdex-volume-chart>
+  </div>
+  <div class="pair">
+    <h2>BTC - EUR</h2>
+    <cdex-volume-chart id="polobtceur"></cdex-volume-chart>
+    <cdex-volume-chart id="okcoinbtceur"></cdex-volume-chart>
+  </div>
+  <div class="pair">
+    <h2>ETH - BTC</h2>
+    <cdex-volume-chart id="poloethbtc"></cdex-volume-chart>
+  </div>
   <cdex-poloniex id="polo"></cdex-poloniex>
-  <cdex-yunbi id="yunbi"></cdex-yunbi>
   <cdex-okcoin id="okcoin"></cdex-okcoin>
+  <cdex-yunbi id="yunbi"></cdex-yunbi>
 </template>
 
 <script src="./cdex-app.js"></script>

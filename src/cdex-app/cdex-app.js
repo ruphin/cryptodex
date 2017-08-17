@@ -26,14 +26,29 @@
         subscription = this.$.polo.subscribeTrades('ETH', 'EUR');
         subscription.on('data', data => {
           data.forEach(trade => {
-            this.$.poloethusd.addTransaction(trade.type, trade.timestamp, trade.amount);
+            this.$.poloetheur.addTransaction(trade.type, trade.timestamp, trade.amount);
           });
         });
 
         subscription = this.$.polo.subscribeTrades('BTC', 'EUR');
         subscription.on('data', data => {
           data.forEach(trade => {
-            this.$.polobtcusd.addTransaction(trade.type, trade.timestamp, trade.amount);
+            this.$.polobtceur.addTransaction(trade.type, trade.timestamp, trade.amount);
+          });
+        });
+
+        subscription = this.$.okcoin.subscribeTrades('ETH', 'EUR');
+        subscription.on('data', data => {
+          data.forEach(trade => {
+            console.log(trade);
+            this.$.okcoinetheur.addTransaction(trade.type, trade.timestamp, trade.amount);
+          });
+        });
+
+        subscription = this.$.okcoin.subscribeTrades('BTC', 'EUR');
+        subscription.on('data', data => {
+          data.forEach(trade => {
+            this.$.okcoinbtceur.addTransaction(trade.type, trade.timestamp, trade.amount);
           });
         });
 

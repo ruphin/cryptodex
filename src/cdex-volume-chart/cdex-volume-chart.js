@@ -2,8 +2,8 @@
   const _source = document.currentScript;
 
   const TIMESPAN_DEFAULT = 3600; // Total seconds in monitoring window
-  const INTERVALS_DEFAULT = 360; // Number of intervals in that window to track
-  const WINDOW_DEFAULT = 12; // Number of intervals in the sliding window (2 mins)
+  const INTERVALS_DEFAULT = 720; // Number of intervals in that window to track
+  const WINDOW_DEFAULT = 24; // Number of intervals in the sliding window (2 mins)
   const SCALE_DEFAULT = 1;
   const MILLISECS = 1000;
   const BUY = Symbol.for('buy');
@@ -24,8 +24,8 @@
       this._sellVolumes = [];
       this._sellList = [];
       this.timespan = TIMESPAN_DEFAULT;
-      this.intervals = INTERVALS_DEFAULT;
       this.window = WINDOW_DEFAULT;
+      this.intervals = INTERVALS_DEFAULT;
       this.scale = SCALE_DEFAULT;
       this.loop = setInterval(() => {
         this.__update();
@@ -63,33 +63,9 @@
     }
 
     set intervals(value) {
-      let old_intervals = this.intervals || 0;
       this._intervals = parseInt(value) || console.error(`Invalid intervals: ${value}`) || INTERVALS_DEFAULT;
-
-      if (old_intervals < this.intervals) {
-        Array.from(Array(this.intervals - old_intervals)).forEach(() => {
-          this._buyVolumes.push(0);
-          this._buyList.push([]);
-          this._sellVolumes.push(0);
-          this._sellList.push([]);
-
-          let bar = document.createElement('div');
-          bar.classList.add('bar');
-          this.$.moments.appendChild(bar);
-          bar = document.createElement('div');
-          bar.classList.add('bar');
-          this.$.averages.appendChild(bar);
-        });
-      } else {
-        this._buyVolumes.pop();
-        this._buyList.pop();
-        this._sellVolumes.pop();
-        this._sellList.pop();
-        Array.from(Array(old_intervals - this.intervals)).forEach(() => {
-          this.$.moments.removeChild(this.$.moments.lastChild);
-          this.$.averages.removeChild(this.$.averages.lastChild);
-        });
-      }
+      this._adjustStorageSize();
+      this._adjustGraphSize();
     }
     get intervals() {
       return this._intervals;
@@ -97,6 +73,7 @@
 
     set window(value) {
       this._window = parseInt(value) || console.error(`Invalid window: ${value}`) || WINDOW_DEFAULT;
+      this._adjustStorageSize();
     }
 
     get window() {
@@ -112,6 +89,39 @@
       return this._scale;
     }
 
+    _adjustGraphSize() {
+      let graphSize = this.$.chart.children.length;
+      if (graphSize < this.intervals) {
+        Array.from(Array(this.intervals - graphSize)).forEach(() => {
+          let bar = document.createElement('div');
+          bar.classList.add('bar');
+          this.$.chart.appendChild(bar);
+        });
+      } else if (graphSize > this.intervals) {
+        Array.from(Array(graphSize - this.intervals)).forEach(() => {
+          this.$.chart.removeChild(this.$.chart.lastChild);
+        });
+      }
+    }
+
+    _adjustStorageSize() {
+      let storageSize = this._buyVolumes.length;
+      if (storageSize < this.intervals + this.window) {
+        Array.from(Array(this.intervals + this.window - storageSize)).forEach(() => {
+          this._buyVolumes.push(0);
+          this._buyList.push([]);
+          this._sellVolumes.push(0);
+          this._sellList.push([]);
+        });
+      } else if (storageSize > this.intervals + this.window) {
+        Array.from(Array(storageSize - (this.intervals + this.window))).forEach(() => {
+          this._buyVolumes.pop();
+          this._buyList.pop();
+          this._sellVolumes.pop();
+          this._sellList.pop();
+        });
+      }
+    }
     _adjustZoom(e) {
       if (e.deltaY < 0) {
         this.scale = this.scale * 1.1;
@@ -125,7 +135,7 @@
     __update() {
       let now = new Date();
       let edge;
-      Array.from(Array(this.intervals).keys()).forEach(n => {
+      Array.from(Array(this.intervals + this.window).keys()).forEach(n => {
         let testDate = new Date(now.getTime() - (n + 1) * this.timespan / this.intervals * MILLISECS);
         while (true) {
           edge = this._buyList[n].shift();
@@ -180,27 +190,11 @@
           let volumePercent = Math.abs(volume) * this.scale;
 
           if (movement > 0) {
-            this.$.averages.children[n - this.window].style.background = `linear-gradient(to bottom, white, white ${50 - volumePercent}%, #C1C5C7 ${50 -
-              volumePercent}%, #C1C5C7 ${50 - movementPercent}%, #639F4D ${50 - movementPercent}%, #639F4D 50%, #C1C5C7 50%, #C1C5C7 ${50 +
-              volumePercent}%, white ${50 + volumePercent}%, white)`;
+            this.$.chart.children[n - this.window].style.background = `linear-gradient(to bottom, white, white ${100 - volumePercent}%, #C1C5C7 ${100 -
+              volumePercent}%, #C1C5C7 ${100 - movementPercent}%, #639F4D ${100 - movementPercent}%, #639F4D 100%`;
           } else {
-            this.$.averages.children[n - this.window].style.background = `linear-gradient(to bottom, white, white ${50 - volumePercent}%, #C1C5C7 ${50 -
-              volumePercent}%, #C1C5C7 50%, #AD092E 50%, #AD092E ${50 + movementPercent}%, #C1C5C7 ${50 + movementPercent}%, #C1C5C7 ${50 +
-              volumePercent}%, white ${50 + volumePercent}%, white)`;
-          }
-        }
-
-        if (n < this.intervals) {
-          let movementPercent = Math.abs(this._buyVolumes[n] + this._sellVolumes[n]) * this.scale;
-          let volumePercent = (this._buyVolumes[n] + this._sellVolumes[n]) * this.scale;
-          if (this._buyVolumes[n] - this._sellVolumes[n] >= 0) {
-            this.$.moments.children[n].style.background = `linear-gradient(to bottom, white, white ${50 - volumePercent}%, #C1C5C7 ${50 -
-              volumePercent}%, #C1C5C7 ${50 - movementPercent}%, #639F4D ${50 - movementPercent}%, #639F4D 50%, #C1C5C7 50%, #C1C5C7 ${50 +
-              volumePercent}%, white ${50 + volumePercent}%, white)`;
-          } else {
-            this.$.moments.children[n].style.background = `linear-gradient(to bottom, white, white ${50 - volumePercent}%, #C1C5C7 ${50 -
-              volumePercent}%, #C1C5C7 50%, #AD092E 50%, #AD092E ${50 + movementPercent}%, #C1C5C7 ${50 + movementPercent}%, #C1C5C7 ${50 +
-              volumePercent}%, white ${50 + volumePercent}%, white)`;
+            this.$.chart.children[n - this.window].style.background = `linear-gradient(to bottom, white, white ${100 - volumePercent}%, #C1C5C7 ${100 -
+              volumePercent}%, #C1C5C7 ${100 - movementPercent}%, #AD092E ${100 - movementPercent}%, #AD092E 100%`;
           }
         }
       });
