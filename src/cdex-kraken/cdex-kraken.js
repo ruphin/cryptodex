@@ -3,8 +3,42 @@
   const SELL = Symbol.for('sell');
   const ORDERS = Symbol.for('orders');
   const TRADES = Symbol.for('trades');
-  const FIAT = ['EUR', 'USD', 'GBP', 'KRW', 'JPY', 'CAD'];
+  const FIAT = [
+    'EUR',
+    'AUD',
+    'BGN',
+    'BRL',
+    'CAD',
+    'CHF',
+    'CNY',
+    'CZK',
+    'DKK',
+    'GBP',
+    'HKD',
+    'HRK',
+    'HUF',
+    'IDR',
+    'ILS',
+    'INR',
+    'JPY',
+    'KRW',
+    'MXN',
+    'MYR',
+    'NOK',
+    'NZD',
+    'PHP',
+    'PLN',
+    'RON',
+    'RUB',
+    'SEK',
+    'SGD',
+    'THB',
+    'TRY',
+    'USD',
+    'ZAR'
+  ];
 
+  // PAIRS[base][currency]
   const PAIRS = {
     DOGE: { BTC: 'XXDGXXBT' },
     DASH: { BTC: 'DASHXBT', EUR: 'DASHEUR', USD: 'DASHUSD' },
@@ -24,19 +58,7 @@
     REP: { BTC: 'XREPXBTC', ETH: 'XREPZETH', EUR: 'XREPZEUR', USD: 'XREPZUSD' }
   };
 
-  const poll = requestKey => {
-    // Sadly these endpoints are blocked by CORS, so we're done here. Shoulda tested that sooner :<
-    fetch(`https://api.bithumb.com/public/${requestKey}`)
-      .then(response => {
-        return response.json();
-      })
-      .then(data => {
-        console.log(data);
-        // Feed data to this._subscriptions[requestKey]
-      });
-    // Poll again after 10 seconds
-    setTimeout(() => poll(requestKey), 10000 - new Date().getTime() % 10000);
-  };
+  const lastMap = {};
 
   class CDexKraken extends CDexExchange {
     static get is() {
@@ -44,8 +66,9 @@
     }
 
     _startSubscription(requestKey) {
+      console.log('STARTING SUBSCRIPTION');
       // Start the poll loop for this requestKey
-      poll(requestKey);
+      this.__poll(requestKey);
     }
 
     _cancelSubscription(requestKey) {
@@ -57,35 +80,52 @@
     }
 
     _requestKey(subscription) {
-      let key, base, currency;
-      if (PAIRS.includes(subscription.base)) {
-        key = PAIRS[subscription.base][subscription.currency];
-        base = subscription.base;
-        currency = subscription.currency;
-      } else if (PAIRS.includes(subscription.currency)) {
-        key = PAIRS[subscription.currency][subscription.base];
-        base = subscription.currency;
-        currency = subscription.base;
-      }
+      let base = subscription.base;
+      let currency = subscription.currency;
+      let key;
 
-      if (key === undefined) {
-        throw `Poloniex - Unsupported: ${subscription.base} - ${subscription.currency}`;
-      }
-
-      if (!ACCEPTED_CURRENCIES.includes(subscription.currency)) {
-        throw `Currency ${subscription.currency} is not supported by Bithumb`;
-      }
-
-      let type;
-      if ((subscription.type = TRADES)) {
-        type = 'recent_transactions/';
-      } else if ((subscription.type = ORDERS)) {
-        type = 'orderbook/';
+      if (PAIRS[base] && (PAIRS[base][currency] || FIAT.includes(currency))) {
+        if (!PAIRS[base][currency]) {
+          currency = 'EUR'; // Default to EUR for non-listed fiat
+        }
+      } else if (PAIRS[currency] && (PAIRS[currency][base] || FIAT.includes(base))) {
+        base = currency;
+        if (!PAIRS[currency][base]) {
+          currency = 'EUR'; // Default to EUR for non-listed fiat
+        } else {
+          currency = subcription.base;
+        }
       } else {
-        throw `Unknown subscription type: ${subscription.type}`;
+        throw 'Requested pair ${subscription.base} - ${subscription.currency} is not traded on Kraken';
       }
 
-      return `${type}${subscription.base}`;
+      key = `${PAIRS[base][currency]}_${String(subscription.type)}`;
+      return [key, base, currency];
+    }
+
+    __poll(requestKey) {
+      let pair = requestKey.split('_')[0];
+      let since = (lastMap[requestKey] && `&since=${lastMap[requestKey]}`) || '';
+      fetch(`https://api.kraken.com/0/public/Trades?pair=${pair}${since}`)
+        .then(response => {
+          return response.json();
+        })
+        .then(data => {
+          data = data.result;
+          lastMap[requestKey] = data.last;
+          let trades = data[pair].map(trade => {
+            let price = Number(trade[0]);
+            let amount = Number(trade[1]);
+            let timestamp = new Date(Math.floor(trade[2] * 1000));
+            let type = trade[3] === 'b' ? BUY : SELL;
+            return { type, timestamp, amount, price };
+          });
+          this._subscriptions[requestKey].forEach(subscription => {
+            subscription.data(trades);
+          });
+        });
+      // Poll again after 10 seconds
+      setTimeout(() => this.__poll(requestKey), 10000 - new Date().getTime() % 10000);
     }
   }
 

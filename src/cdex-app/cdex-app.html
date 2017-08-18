@@ -1,6 +1,7 @@
 <link rel="import" href="/bower_components/gluonjs/gluon.html">
 <link rel="import" href="../cdex-volume-chart/cdex-volume-chart.html">
 <link rel="import" href="../cdex-poloniex/cdex-poloniex.html">
+<link rel="import" href="../cdex-kraken/cdex-kraken.html">
 <link rel="import" href="../cdex-bithumb/cdex-bithumb.html">
 <link rel="import" href="../cdex-yunbi/cdex-yunbi.html">
 <link rel="import" href="../cdex-okcoin/cdex-okcoin.html">
@@ -11,19 +12,21 @@
     <h2>ETH - EUR</h2>
     <cdex-volume-chart id="poloetheur"></cdex-volume-chart>
     <cdex-volume-chart id="okcoinetheur"></cdex-volume-chart>
+    <cdex-volume-chart id="krakenetheur"></cdex-volume-chart>
   </div>
   <div class="pair">
     <h2>BTC - EUR</h2>
     <cdex-volume-chart id="polobtceur"></cdex-volume-chart>
     <cdex-volume-chart id="okcoinbtceur"></cdex-volume-chart>
+    <cdex-volume-chart id="krakenbtceur"></cdex-volume-chart>
   </div>
-  <div class="pair">
+  <!-- <div class="pair">
     <h2>ETH - BTC</h2>
     <cdex-volume-chart id="poloethbtc"></cdex-volume-chart>
-  </div>
+  </div> -->
   <cdex-poloniex id="polo"></cdex-poloniex>
   <cdex-okcoin id="okcoin"></cdex-okcoin>
-  <cdex-yunbi id="yunbi"></cdex-yunbi>
+  <cdex-kraken id="kraken"></cdex-kraken>
 </template>
 
 <script src="./cdex-app.js"></script>
