@@ -51,48 +51,24 @@
           });
         });
 
-        subscription = this.$.polo.subscribeOrderBook('ETH', 'BTC');
-        subscription.on('data', data => {
-          data.forEach(order => {
-            console.log(`${order.type === BUY ? 'BUY' : 'SELL'} ${order.price}: ${order.amount >= 0 ? '+' + order.amount : order.amount}`);
-          });
-        });
-
-        // subscription = this.$.polo.getOrderBook('ETH', 'BTC');
+        // subscription = this.$.bithumb.subscribeTrades('BTC', 'EUR');
         // subscription.on('data', data => {
-        //   console.log('Order book ETH-BTC');
-        //   let sellOrders = data[0];
-        //   let buyOrders = data[1];
-        //   console.log('Sell orders:');
-        //   console.log(sellOrders);
-        //   console.log('Buy orders:');
-        //   console.log(buyOrders);
+        //   data.forEach(trade => {
+        //     console.log(`TRADE ${trade.type === BUY ? 'BUY' : 'SELL'} ${trade.price} ${trade.amount} ${trade.timestamp.toISOString()}`);
+        //   });
         // });
 
-        // Yunbi
-
-        /*subscription = this.$.yunbi.subscribeTrades('BTC', 'CNY');
-        subscription.on('data', data => {
-          console.log(data);
-        });*/
-
-        // OKCoin
-
-        // subscription = this.$.okcoin.subscribeTrades("CNY", "BTC");
-        // subscription.on("data", data => {
-        //   console.log(data);
+        // subscription = this.$.okcoin.subscribeTrades('BTC', 'CNY');
+        // subscription.on('data', data => {
+        //   data.forEach(trade => {
+        //     console.log(`TRADE ${trade.type === BUY ? 'BUY' : 'SELL'} ${trade.price} ${trade.amount}`);
+        //   });
         // });
         //
-        // subscription = this.$.okcoin.subscribeOrderBook("CNY", "BTC");
-        // subscription.on("data", data => {
+        // subscription = this.$.okcoin.subscribeOrderBook('BTC', 'CNY');
+        // subscription.on('data', data => {
         //   data.forEach(order => {
-        //     console.log(
-        //       `${order.type === BUY
-        //         ? "BUY"
-        //         : "SELL"} ${order.price}: ${order.amount >= 0
-        //         ? "+" + order.amount
-        //         : order.amount}`
-        //     );
+        //     console.log(`${order.type === BUY ? 'BUY' : 'SELL'} ${order.price}: ${order.amount >= 0 ? '+' + order.amount : order.amount}`);
         //   });
         // });
       }, 1000);
