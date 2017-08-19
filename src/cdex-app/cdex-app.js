@@ -16,45 +16,62 @@
       // Poloniex
 
       window.setTimeout(() => {
-        let subscription = this.$.polo.subscribeTrades('ETH', 'EUR');
+        let subscription;
+
+        // subscription = this.$.polo.subscribeTrades('ETH', 'EUR');
+        // subscription.on('data', data => {
+        //   data.forEach(trade => {
+        //     this.$.poloetheur.addTransaction(trade.type, trade.timestamp, trade.amount);
+        //   });
+        // });
+        // subscription = this.$.kraken.subscribeTrades('ETH', 'EUR');
+        // subscription.on('data', data => {
+        //   data.forEach(trade => {
+        //     this.$.krakenetheur.addTransaction(trade.type, trade.timestamp, trade.amount);
+        //   });
+        // });
+        // subscription = this.$.okcoin.subscribeTrades('ETH', 'EUR');
+        // subscription.on('data', data => {
+        //   data.forEach(trade => {
+        //     this.$.okcoinetheur.addTransaction(trade.type, trade.timestamp, trade.amount);
+        //   });
+        // });
+
+        subscription = this.$.polo.subscribeTrades('BCH', 'EUR');
         subscription.on('data', data => {
           data.forEach(trade => {
-            this.$.poloetheur.addTransaction(trade.type, trade.timestamp, trade.amount);
+            this.$.polobcheur.addTransaction(trade.type, trade.timestamp, trade.amount);
+          });
+        });
+        subscription = this.$.kraken.subscribeTrades('BCH', 'EUR');
+        subscription.on('data', data => {
+          data.forEach(trade => {
+            this.$.krakenbcheur.addTransaction(trade.type, trade.timestamp, trade.amount);
+          });
+        });
+        subscription = this.$.kraken.subscribeTrades('BCH', 'USD');
+        subscription.on('data', data => {
+          data.forEach(trade => {
+            this.$.krakenbchusd.addTransaction(trade.type, trade.timestamp, trade.amount);
+          });
+        });
+        subscription = this.$.bithumb.subscribeTrades('BCH', 'EUR');
+        subscription.on('data', data => {
+          data.forEach(trade => {
+            this.$.bithumbbcheur.addTransaction(trade.type, trade.timestamp, trade.amount);
           });
         });
 
-        subscription = this.$.polo.subscribeTrades('BTC', 'EUR');
+        subscription = this.$.polo.subscribeTrades('BCH', 'BTC');
         subscription.on('data', data => {
           data.forEach(trade => {
-            this.$.polobtceur.addTransaction(trade.type, trade.timestamp, trade.amount);
+            this.$.polobchbtc.addTransaction(trade.type, trade.timestamp, trade.amount);
           });
         });
-
-        subscription = this.$.kraken.subscribeTrades('ETH', 'EUR');
+        subscription = this.$.kraken.subscribeTrades('BCH', 'BTC');
         subscription.on('data', data => {
           data.forEach(trade => {
-            this.$.krakenetheur.addTransaction(trade.type, trade.timestamp, trade.amount);
-          });
-        });
-
-        subscription = this.$.kraken.subscribeTrades('BTC', 'EUR');
-        subscription.on('data', data => {
-          data.forEach(trade => {
-            this.$.krakenbtceur.addTransaction(trade.type, trade.timestamp, trade.amount);
-          });
-        });
-
-        subscription = this.$.okcoin.subscribeTrades('ETH', 'EUR');
-        subscription.on('data', data => {
-          data.forEach(trade => {
-            this.$.okcoinetheur.addTransaction(trade.type, trade.timestamp, trade.amount);
-          });
-        });
-
-        subscription = this.$.okcoin.subscribeTrades('BTC', 'EUR');
-        subscription.on('data', data => {
-          data.forEach(trade => {
-            this.$.okcoinbtceur.addTransaction(trade.type, trade.timestamp, trade.amount);
+            this.$.krakenbchbtc.addTransaction(trade.type, trade.timestamp, trade.amount);
           });
         });
 
