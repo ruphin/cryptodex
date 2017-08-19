@@ -95,7 +95,7 @@
         type: trade.type === 'ask' ? SELL : BUY,
         price: Number(trade.price),
         amount: Number(trade.units_traded),
-        timestamp: new Date(trade.transaction_date)
+        timestamp: new Date(new Date(trade.transaction_date) - 5 * 60 * 60 * 1000)
       };
     }
   }
