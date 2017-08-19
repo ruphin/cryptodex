@@ -84,7 +84,7 @@
       });
       // Handle the case we didn't find the last trade.
       if (index === -1) {
-        console.log(`Bithumb: possible trades missed between ${lastTrade.transaction_date} and ${data[-1].transaction_date}`);
+        console.log(`Bithumb: possible trades missed between ${lastTrade.transaction_date} and ${data[data.length - 1].transaction_date}`);
         return data;
       }
       return data.slice(0, index);
