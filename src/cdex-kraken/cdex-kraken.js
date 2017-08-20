@@ -125,7 +125,7 @@
           });
         });
       // Poll again after 10 seconds
-      setTimeout(() => this.__poll(requestKey), 10000 - new Date().getTime() % 10000);
+      setTimeout(() => this.__poll(requestKey), 20000 - new Date().getTime() % 20000);
     }
   }
 

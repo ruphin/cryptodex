@@ -57,7 +57,7 @@
           this.__processData(requestKey, data.data);
         });
       // Poll again after 10 seconds
-      setTimeout(() => this.__poll(requestKey), 10000 - new Date().getTime() % 10000);
+      setTimeout(() => this.__poll(requestKey), 1000 - new Date().getTime() % 1000);
     }
 
     __processData(requestKey, data) {
