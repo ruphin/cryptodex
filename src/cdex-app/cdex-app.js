@@ -40,38 +40,44 @@
         subscription = this.$.polo.subscribeTrades('ETH', 'EUR');
         subscription.on('data', data => {
           data.forEach(trade => {
-            this.$.polobcheur.addTransaction(trade.type, trade.timestamp, trade.amount);
+            this.$.polofiat.addTransaction(trade.type, trade.timestamp, trade.amount);
           });
         });
         subscription = this.$.kraken.subscribeTrades('ETH', 'EUR');
         subscription.on('data', data => {
           data.forEach(trade => {
-            this.$.krakenbcheur.addTransaction(trade.type, trade.timestamp, trade.amount);
+            this.$.krakeneur.addTransaction(trade.type, trade.timestamp, trade.amount);
           });
         });
         subscription = this.$.kraken.subscribeTrades('ETH', 'USD');
         subscription.on('data', data => {
           data.forEach(trade => {
-            this.$.krakenbchusd.addTransaction(trade.type, trade.timestamp, trade.amount);
+            this.$.krakenusd.addTransaction(trade.type, trade.timestamp, trade.amount);
           });
         });
         subscription = this.$.bithumb.subscribeTrades('ETH', 'EUR');
         subscription.on('data', data => {
           data.forEach(trade => {
-            this.$.bithumbbcheur.addTransaction(trade.type, trade.timestamp, trade.amount);
+            this.$.bithumbfiat.addTransaction(trade.type, trade.timestamp, trade.amount);
+          });
+        });
+        subscription = this.$.okcoin.subscribeTrades('ETH', 'EUR');
+        subscription.on('data', data => {
+          data.forEach(trade => {
+            this.$.okcoinfiat.addTransaction(trade.type, trade.timestamp, trade.amount);
           });
         });
 
         subscription = this.$.polo.subscribeTrades('ETH', 'BTC');
         subscription.on('data', data => {
           data.forEach(trade => {
-            this.$.polobchbtc.addTransaction(trade.type, trade.timestamp, trade.amount);
+            this.$.polobtc.addTransaction(trade.type, trade.timestamp, trade.amount);
           });
         });
         subscription = this.$.kraken.subscribeTrades('ETH', 'BTC');
         subscription.on('data', data => {
           data.forEach(trade => {
-            this.$.krakenbchbtc.addTransaction(trade.type, trade.timestamp, trade.amount);
+            this.$.krakenbtc.addTransaction(trade.type, trade.timestamp, trade.amount);
           });
         });
 
