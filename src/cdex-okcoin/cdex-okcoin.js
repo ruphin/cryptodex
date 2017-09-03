@@ -67,7 +67,7 @@
 
     __connect() {
       console.info('Okcoin - connecting backend');
-      sock = new WebSocket('wss://real.okcoin.com:10440/websocket/okcoinapi');
+      sock = new WebSocket('wss://real.okcoin.cn:10440/websocket/okcoinapi');
 
       sock.addEventListener('open', () => {
         console.info('Okcoin - connected');

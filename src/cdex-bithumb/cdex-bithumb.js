@@ -54,10 +54,14 @@
           return response.json();
         })
         .then(data => {
-          this.__processData(requestKey, data.data);
+          if (data.status == '0000') {
+            this.__processData(requestKey, data.data);
+          } else {
+            console.warn(`bithumb - Error: ${data.message}`);
+          }
         });
       // Poll again after 10 seconds
-      setTimeout(() => this.__poll(requestKey), 1000 - new Date().getTime() % 1000);
+      setTimeout(() => this.__poll(requestKey), 10000 - new Date().getTime() % 10000);
     }
 
     __processData(requestKey, data) {
