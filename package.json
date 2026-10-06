@@ -1,11 +1,18 @@
 {
+  "name": "cryptodex",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "docker": "npm run build && docker build -t ruphin/cryptodex ."
+  },
   "devDependencies": {
-    "browser-sync": "^2.18.8",
-    "connect-history-api-fallback": "^1.3.0",
-    "del": "^2.2.2",
-    "gulp": "^3.9.1",
-    "gulp-replace": "^0.6.1",
-    "path": "^0.12.7",
-    "gulp-useref": "^3.1.2"
+    "vite": "^8.3.3"
+  },
+  "dependencies": {
+    "@webcomponents/webcomponentsjs": "^1.3.3",
+    "gluonjs": "^0.0.11"
   }
 }
